@@ -1,4 +1,5 @@
-import { Bell, ChevronDown, User } from "lucide-react";
+import { Bell, ChevronDown, User, Settings, LogOut, CreditCard } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,13 +12,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const DashboardHeader = () => {
-  const navItems = [
-    { label: "Dashboard", href: "#", active: true },
-    { label: "Calendar", href: "#" },
-    { label: "Payments", href: "#" },
-    { label: "Help", href: "#" },
-  ];
-
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4">
@@ -34,20 +28,16 @@ const DashboardHeader = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => (
-              <Button
-                key={item.label}
-                variant={item.active ? "secondary" : "ghost"}
-                className={`text-sm ${
-                  item.active 
-                    ? "bg-primary/10 text-primary hover:bg-primary/20" 
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {item.label}
-              </Button>
-            ))}
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
+              Dashboard
+            </Link>
+            <Link to="/calendar" className="text-muted-foreground hover:text-foreground transition-colors">
+              Calendar
+            </Link>
+            <Link to="/help" className="text-muted-foreground hover:text-foreground transition-colors">
+              Help
+            </Link>
           </nav>
 
           {/* User Profile and Actions */}
@@ -71,13 +61,27 @@ const DashboardHeader = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>John Smith</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile Settings</DropdownMenuItem>
-                <DropdownMenuItem>Notifications</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/payments" className="cursor-pointer flex">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Payment History
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Account Settings
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Sign Out</DropdownMenuItem>
+                <DropdownMenuItem>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
