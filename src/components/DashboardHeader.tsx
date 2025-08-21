@@ -22,6 +22,20 @@ const DashboardHeader = () => {
     { title: "Help", icon: HelpCircle },
   ];
 
+  // Determine selected tab based on current route
+  const getSelectedIndex = () => {
+    switch (location.pathname) {
+      case '/':
+        return 0;
+      case '/calendar':
+        return 1;
+      case '/help':
+        return 2;
+      default:
+        return 0; // Default to dashboard
+    }
+  };
+
   const handleTabChange = (index: number | null) => {
     if (index === null) return;
     
@@ -56,6 +70,7 @@ const DashboardHeader = () => {
           <div className="hidden md:flex">
             <ExpandableTabs 
               tabs={tabs} 
+              selectedIndex={getSelectedIndex()}
               onChange={handleTabChange}
               className="border-border/50"
             />

@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import DashboardHeader from "./components/DashboardHeader";
 import Index from "./pages/Index";
 import Calendar from "./pages/Calendar";
 import Payments from "./pages/Payments";
@@ -11,20 +12,38 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const MainLayout = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  
+  // Show header on main app routes
+  const showHeader = ['/', '/calendar', '/help'].includes(location.pathname);
+  
+  return (
+    <div className="min-h-screen bg-background">
+      {showHeader && <DashboardHeader />}
+      <main>
+        {children}
+      </main>
+    </div>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/payments" element={<Payments />} />
-          <Route path="/help" element={<Help />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <MainLayout>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/payments" element={<Payments />} />
+            <Route path="/help" element={<Help />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </MainLayout>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -193,33 +193,8 @@ const Calendar = () => {
   const days = getDaysInMonth(currentDate);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-4 max-w-7xl">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => navigate('/')}
-              className="hover:bg-accent"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-semibold text-foreground">Project Calendar</h1>
-            </div>
-          </div>
-          
-          {/* Progress Indicator */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Overall Progress:</span>
-            <Badge variant="secondary" className="bg-primary/10 text-primary">65%</Badge>
-          </div>
-        </div>
-
-        {/* Calendar Navigation */}
+    <div className="container mx-auto p-4 max-w-7xl">
+      {/* Calendar Navigation */}
         <Card className="mb-6">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
@@ -370,7 +345,6 @@ const Calendar = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Send, Bot, User } from "lucide-react";
-import DashboardHeader from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -64,17 +63,14 @@ const Help = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader />
-      
-      <main className="container mx-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-foreground">Help Center</h1>
-            <p className="text-muted-foreground mt-2">
-              Get instant support from our AI assistant
-            </p>
-          </div>
+    <div className="container mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Help Center</h1>
+          <p className="text-muted-foreground mt-2">
+            Get instant support from our AI assistant
+          </p>
+        </div>
 
           <div className="bg-card rounded-lg border shadow-sm">
             {/* Chat Messages */}
@@ -164,7 +160,7 @@ const Help = () => {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
