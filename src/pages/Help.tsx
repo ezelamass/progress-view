@@ -72,7 +72,7 @@ const Help = () => {
           </p>
         </div>
 
-          <div className="bg-card rounded-lg border shadow-sm">
+        <div className="bg-card rounded-lg border shadow-sm">
             {/* Chat Messages */}
             <ScrollArea className="h-[500px] p-6">
               <div className="space-y-4">
@@ -136,10 +136,10 @@ const Help = () => {
                 </Button>
               </div>
             </div>
-          </div>
+        </div>
 
-          {/* Quick Actions */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Quick Actions */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-card rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer">
               <h3 className="font-medium text-foreground mb-2">Project Status</h3>
               <p className="text-sm text-muted-foreground">
@@ -158,7 +158,6 @@ const Help = () => {
                 Questions about billing and payments
               </p>
             </div>
-          </div>
         </div>
       </div>
     </div>
