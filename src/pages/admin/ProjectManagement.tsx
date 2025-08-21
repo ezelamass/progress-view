@@ -81,6 +81,7 @@ const mockProjects = [
     endDate: "2024-03-15",
     description: "Building a comprehensive e-commerce platform with payment integration and inventory management.",
     environment: "test",
+    driveFolderUrl: "https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz",
     phases: [
       { name: "Week 1: Setup & Info Collection", status: "completed", duration: 7 },
       { name: "Week 2-3: Implementation & Development", status: "in-progress", duration: 14 },
@@ -105,6 +106,7 @@ const mockProjects = [
     endDate: "2024-04-20",
     description: "Native mobile application for iOS and Android with real-time synchronization features.",
     environment: "test",
+    driveFolderUrl: "https://drive.google.com/drive/folders/2XyZwAbCdEfGhIjKlMnOpQr",
     phases: [
       { name: "Week 1: Setup & Info Collection", status: "in-progress", duration: 7 },
       { name: "Week 2-3: Implementation & Development", status: "pending", duration: 14 },
@@ -129,6 +131,7 @@ const mockProjects = [
     endDate: "2024-02-28",
     description: "Complete website redesign with modern UI/UX and improved performance optimization.",
     environment: "production",
+    driveFolderUrl: "",
     phases: [
       { name: "Week 1: Setup & Info Collection", status: "completed", duration: 7 },
       { name: "Week 2-3: Implementation & Development", status: "completed", duration: 14 },
@@ -153,6 +156,7 @@ const mockProjects = [
     endDate: "2024-05-10",
     description: "Custom customer relationship management system with advanced analytics and reporting.",
     environment: "test",
+    driveFolderUrl: "https://drive.google.com/drive/folders/4StUvWxYzAbCdEfGhIjKl",
     phases: [
       { name: "Week 1: Setup & Info Collection", status: "completed", duration: 7 },
       { name: "Week 2-3: Implementation & Development", status: "on-hold", duration: 14 },
@@ -220,6 +224,7 @@ export default function ProjectManagement() {
       startDate: "",
       endDate: "",
       environment: "test",
+      driveFolderUrl: "",
       phases: [
         { name: "Week 1: Setup & Info Collection", duration: 7 },
         { name: "Week 2-3: Implementation & Development", duration: 14 },
@@ -599,7 +604,27 @@ export default function ProjectManagement() {
                         </FormItem>
                       )}
                      />
-                   </div>
+                    </div>
+                   <FormField
+                     control={form.control}
+                     name="driveFolderUrl"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>Google Drive Folder URL</FormLabel>
+                         <FormControl>
+                           <Input 
+                             type="url"
+                             placeholder="https://drive.google.com/drive/folders/..."
+                             {...field} 
+                           />
+                         </FormControl>
+                         <FormDescription>
+                           Shared Google Drive folder for project files (optional)
+                         </FormDescription>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
                    <FormField
                      control={form.control}
                      name="environment"

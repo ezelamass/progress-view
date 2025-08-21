@@ -4,6 +4,11 @@ import QuickActions from "@/components/QuickActions";
 import RecentActivity from "@/components/RecentActivity";
 
 const Index = () => {
+  // Mock current project data - in real implementation this would come from API/context
+  const currentProject = {
+    driveFolderUrl: "https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz"
+  };
+
   return (
     <div className="container mx-auto px-6 py-8">
       {/* Welcome Section */}
@@ -21,7 +26,7 @@ const Index = () => {
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Quick Actions - Top Position */}
-          <QuickActions />
+          <QuickActions project={currentProject} />
           
           {/* ROI Visualizer */}
           <ROICard />

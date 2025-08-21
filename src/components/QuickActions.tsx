@@ -3,13 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const QuickActions = () => {
+interface QuickActionsProps {
+  project?: {
+    driveFolderUrl?: string;
+  };
+}
+
+const QuickActions = ({ project }: QuickActionsProps) => {
   const actions = [
     {
       icon: Calendar,
       label: "Schedule Follow-up",
       description: "Book a new meeting with team members",
-      action: () => window.open("https://calendly.com", "_blank"),
+      action: () => window.open("https://calendly.com/ezequiellamas-advantx/15min-seguimiento", "_blank"),
       primary: true,
     },
     {
@@ -23,7 +29,13 @@ const QuickActions = () => {
       icon: Folder,
       label: "Manage Files",
       description: "Upload, organize and share project files",
-      action: () => window.open("https://drive.google.com", "_blank"),
+      action: () => {
+        if (project?.driveFolderUrl) {
+          window.open(project.driveFolderUrl, "_blank");
+        } else {
+          window.open("https://drive.google.com", "_blank");
+        }
+      },
       primary: false,
     },
     {
