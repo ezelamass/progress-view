@@ -1,5 +1,5 @@
-import { Bell, ChevronDown, User, Settings, LogOut, CreditCard } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Bell, ChevronDown, User, Settings, LogOut, CreditCard, Home, Calendar, HelpCircle } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,8 +10,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 
 const DashboardHeader = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const tabs = [
+    { title: "Dashboard", icon: Home },
+    { title: "Calendar", icon: Calendar },
+    { title: "Help", icon: HelpCircle },
+  ];
+
+  const handleTabChange = (index: number | null) => {
+    if (index === null) return;
+    
+    switch (index) {
+      case 0:
+        navigate("/");
+        break;
+      case 1:
+        navigate("/calendar");
+        break;
+      case 2:
+        navigate("/help");
+        break;
+    }
+  };
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4">
@@ -28,17 +53,13 @@ const DashboardHeader = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-              Dashboard
-            </Link>
-            <Link to="/calendar" className="text-muted-foreground hover:text-foreground transition-colors">
-              Calendar
-            </Link>
-            <Link to="/help" className="text-muted-foreground hover:text-foreground transition-colors">
-              Help
-            </Link>
-          </nav>
+          <div className="hidden md:flex">
+            <ExpandableTabs 
+              tabs={tabs} 
+              onChange={handleTabChange}
+              className="border-border/50"
+            />
+          </div>
 
           {/* User Profile and Actions */}
           <div className="flex items-center space-x-3">
