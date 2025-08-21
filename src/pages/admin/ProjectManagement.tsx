@@ -18,7 +18,9 @@ import {
   Eye,
   Trash2,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  TestTube,
+  Globe
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,6 +63,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
 
@@ -77,6 +80,7 @@ const mockProjects = [
     startDate: "2024-01-15",
     endDate: "2024-03-15",
     description: "Building a comprehensive e-commerce platform with payment integration and inventory management.",
+    environment: "test",
     phases: [
       { name: "Week 1: Setup & Info Collection", status: "completed", duration: 7 },
       { name: "Week 2-3: Implementation & Development", status: "in-progress", duration: 14 },
@@ -100,6 +104,7 @@ const mockProjects = [
     startDate: "2024-02-01",
     endDate: "2024-04-20",
     description: "Native mobile application for iOS and Android with real-time synchronization features.",
+    environment: "test",
     phases: [
       { name: "Week 1: Setup & Info Collection", status: "in-progress", duration: 7 },
       { name: "Week 2-3: Implementation & Development", status: "pending", duration: 14 },
@@ -123,6 +128,7 @@ const mockProjects = [
     startDate: "2023-12-01",
     endDate: "2024-02-28",
     description: "Complete website redesign with modern UI/UX and improved performance optimization.",
+    environment: "production",
     phases: [
       { name: "Week 1: Setup & Info Collection", status: "completed", duration: 7 },
       { name: "Week 2-3: Implementation & Development", status: "completed", duration: 14 },
@@ -146,6 +152,7 @@ const mockProjects = [
     startDate: "2024-01-08",
     endDate: "2024-05-10",
     description: "Custom customer relationship management system with advanced analytics and reporting.",
+    environment: "test",
     phases: [
       { name: "Week 1: Setup & Info Collection", status: "completed", duration: 7 },
       { name: "Week 2-3: Implementation & Development", status: "on-hold", duration: 14 },
@@ -212,6 +219,7 @@ export default function ProjectManagement() {
       description: "",
       startDate: "",
       endDate: "",
+      environment: "test",
       phases: [
         { name: "Week 1: Setup & Info Collection", duration: 7 },
         { name: "Week 2-3: Implementation & Development", duration: 14 },
@@ -372,6 +380,7 @@ export default function ProjectManagement() {
                 <TableHead>Project</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Environment</TableHead>
                 <TableHead>Progress</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead>End Date</TableHead>
@@ -402,6 +411,18 @@ export default function ProjectManagement() {
                     <Badge variant={getStatusColor(project.status) as any}>
                       {project.status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      {project.environment === "production" ? (
+                        <Globe className="h-4 w-4 text-success" />
+                      ) : (
+                        <TestTube className="h-4 w-4 text-warning" />
+                      )}
+                      <span className="capitalize text-sm">
+                        {project.environment}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="w-24">
@@ -577,12 +598,89 @@ export default function ProjectManagement() {
                           <FormMessage />
                         </FormItem>
                       )}
-                    />
-                  </div>
-                </div>
-              )}
+                     />
+                   </div>
+                   <FormField
+                     control={form.control}
+                     name="environment"
+                     render={({ field }) => (
+                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                         <div className="space-y-0.5">
+                           <FormLabel>Environment</FormLabel>
+                           <FormDescription>
+                             Set project to Test (development) or Production (live)
+                           </FormDescription>
+                         </div>
+                         <FormControl>
+                           <div className="flex items-center space-x-2">
+                             <TestTube className="h-4 w-4 text-warning" />
+                             <Switch
+                               checked={field.value === "production"}
+                               onCheckedChange={(checked) => 
+                                 field.onChange(checked ? "production" : "test")
+                               }
+                             />
+                             <Globe className="h-4 w-4 text-success" />
+                           </div>
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
+                   <FormField
+                     control={form.control}
+                     name="status"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>Project Status</FormLabel>
+                         <Select onValueChange={field.onChange} defaultValue={field.value}>
+                           <FormControl>
+                             <SelectTrigger>
+                               <SelectValue placeholder="Select project status" />
+                             </SelectTrigger>
+                           </FormControl>
+                           <SelectContent>
+                             <SelectItem value="Planning">Planning</SelectItem>
+                             <SelectItem value="In Progress">In Progress</SelectItem>
+                             <SelectItem value="On Hold">On Hold</SelectItem>
+                             <SelectItem value="Completed">Completed</SelectItem>
+                             <SelectItem value="Cancelled">Cancelled</SelectItem>
+                           </SelectContent>
+                         </Select>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
+                   <FormField
+                     control={form.control}
+                     name="progress"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel>Progress Percentage</FormLabel>
+                         <FormControl>
+                           <div className="px-3">
+                             <Slider
+                               min={0}
+                               max={100}
+                               step={5}
+                               value={[field.value]}
+                               onValueChange={(values) => field.onChange(values[0])}
+                             />
+                             <div className="flex justify-between text-sm text-muted-foreground mt-1">
+                               <span>0%</span>
+                               <span className="font-medium">{field.value}%</span>
+                               <span>100%</span>
+                             </div>
+                           </div>
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
+                 </div>
+               )}
 
-              {dialogStep === 2 && (
+               {dialogStep === 2 && (
                 <div className="space-y-4">
                   <div className="text-sm text-muted-foreground">
                     Configure project phases and their durations. Default phases based on Client Hub standard workflow.
