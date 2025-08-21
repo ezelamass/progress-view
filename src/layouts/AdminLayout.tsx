@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -9,7 +9,9 @@ import {
   Menu,
   X,
   LogOut,
-  User
+  User,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const adminNavItems = [
@@ -52,7 +55,23 @@ const adminNavItems = [
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+
+  // Load collapsed state from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('admin-sidebar-collapsed');
+    if (saved !== null) {
+      setSidebarCollapsed(JSON.parse(saved));
+    }
+  }, []);
+
+  // Save collapsed state to localStorage
+  const toggleSidebarCollapsed = () => {
+    const newState = !sidebarCollapsed;
+    setSidebarCollapsed(newState);
+    localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(newState));
+  };
 
   const isActivePath = (path: string) => {
     if (path === "/admin") {
@@ -72,52 +91,88 @@ export default function AdminLayout() {
       )}
 
       {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        )}
-      >
-        <div className="flex h-full flex-col">
-          {/* Logo */}
-          <div className="flex h-16 items-center border-b border-border px-6">
-            <div className="flex items-center space-x-3">
-              <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <span className="text-sm font-bold text-primary-foreground">A</span>
+      <TooltipProvider>
+        <aside
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 bg-card border-r border-border transition-all duration-300 ease-in-out lg:relative lg:translate-x-0",
+            sidebarCollapsed ? "w-16" : "w-64",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          )}
+        >
+          <div className="flex h-full flex-col">
+            {/* Logo and Collapse Toggle */}
+            <div className="flex h-16 items-center border-b border-border px-6 justify-between">
+              <div className="flex items-center space-x-3 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm font-bold text-primary-foreground">A</span>
+                </div>
+                {!sidebarCollapsed && (
+                  <div className="min-w-0">
+                    <h1 className="text-lg font-semibold text-foreground truncate">Admin Console</h1>
+                    <p className="text-xs text-muted-foreground truncate">Client Hub Management</p>
+                  </div>
+                )}
               </div>
-              <div>
-                <h1 className="text-lg font-semibold text-foreground">Admin Console</h1>
-                <p className="text-xs text-muted-foreground">Client Hub Management</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 space-y-1 p-4">
-            {adminNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = isActivePath(item.href);
               
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  )}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.title}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      </aside>
+              {/* Collapse toggle - hidden on mobile */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden lg:flex h-8 w-8 flex-shrink-0"
+                onClick={toggleSidebarCollapsed}
+              >
+                {sidebarCollapsed ? (
+                  <ChevronRight className="h-4 w-4" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 space-y-1 p-4">
+              {adminNavItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = isActivePath(item.href);
+                
+                const navItem = (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      sidebarCollapsed ? "justify-center" : "space-x-3",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    {!sidebarCollapsed && <span>{item.title}</span>}
+                  </Link>
+                );
+
+                // Wrap with tooltip when collapsed
+                if (sidebarCollapsed) {
+                  return (
+                    <Tooltip key={item.href}>
+                      <TooltipTrigger asChild>
+                        {navItem}
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="font-medium">
+                        {item.title}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                }
+
+                return navItem;
+              })}
+            </nav>
+          </div>
+        </aside>
+      </TooltipProvider>
 
       {/* Main content */}
       <div className="flex flex-1 flex-col">
