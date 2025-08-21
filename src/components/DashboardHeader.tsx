@@ -1,26 +1,22 @@
 import { Bell, ChevronDown, User, Settings, LogOut, CreditCard, Home, Calendar, HelpCircle } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
-
 const DashboardHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  const tabs = [
-    { title: "Dashboard", icon: Home },
-    { title: "Calendar", icon: Calendar },
-    { title: "Help", icon: HelpCircle },
-  ];
+  const tabs = [{
+    title: "Dashboard",
+    icon: Home
+  }, {
+    title: "Calendar",
+    icon: Calendar
+  }, {
+    title: "Help",
+    icon: HelpCircle
+  }];
 
   // Determine selected tab based on current route
   const getSelectedIndex = () => {
@@ -32,13 +28,12 @@ const DashboardHeader = () => {
       case '/help':
         return 2;
       default:
-        return 0; // Default to dashboard
+        return 0;
+      // Default to dashboard
     }
   };
-
   const handleTabChange = (index: number | null) => {
     if (index === null) return;
-    
     switch (index) {
       case 0:
         navigate("/");
@@ -51,8 +46,7 @@ const DashboardHeader = () => {
         break;
     }
   };
-  return (
-    <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+  return <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Company Logo and Name */}
@@ -68,20 +62,12 @@ const DashboardHeader = () => {
 
           {/* Navigation */}
           <div className="hidden md:flex">
-            <ExpandableTabs 
-              tabs={tabs} 
-              selectedIndex={getSelectedIndex()}
-              onChange={handleTabChange}
-              className="border-border/50"
-            />
+            <ExpandableTabs tabs={tabs} selectedIndex={getSelectedIndex()} onChange={handleTabChange} className="border-border/50" />
           </div>
 
           {/* User Profile and Actions */}
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full"></span>
-            </Button>
+            
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -123,8 +109,6 @@ const DashboardHeader = () => {
           </div>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default DashboardHeader;
