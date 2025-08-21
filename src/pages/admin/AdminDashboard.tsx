@@ -1,52 +1,16 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
-  Users, 
-  FolderKanban, 
-  DollarSign, 
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Calendar,
-  Bell,
-  ArrowUpRight,
-  ArrowDownRight,
-  Eye,
-  UserPlus,
-  FolderPlus,
-  BarChart3,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  CalendarIcon,
-  DollarSignIcon
-} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useForm } from "react-hook-form";
 import { 
   LineChart, 
   Line, 
@@ -59,14 +23,37 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
+  Legend, 
   ResponsiveContainer,
   Area,
   AreaChart
 } from "recharts";
 import { Link } from "react-router-dom";
+import {
+  TrendingUp,
+  Users,
+  FolderKanban,
+  DollarSign,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  Calendar,
+  FileText,
+  Target,
+  Activity,
+  Bell,
+  UserPlus,
+  FolderPlus,
+  Plus,
+  ArrowUpRight,
+  ArrowDownRight,
+  AlertTriangle,
+  XCircle,
+  Eye
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import React, { useState } from "react";
+import QuickActionsWidget from "@/components/admin/widgets/QuickActionsWidget";
 
 // Mock data for charts and metrics
 const revenueData = [
@@ -170,56 +157,6 @@ const alerts = [
   }
 ];
 
-// Data interfaces for quick actions
-interface ClientFormData {
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  logoUrl: string;
-  status: "Active" | "Inactive";
-}
-
-interface ProjectFormData {
-  name: string;
-  clientId: string;
-  description: string;
-  startDate: Date | undefined;
-  endDate: Date | undefined;
-  projectType: string;
-  duration: string;
-  employeeCount: number;
-  hoursPerEmployee: number;
-  costPerHour: number;
-  priority: string;
-}
-
-interface PaymentFormData {
-  clientId: string;
-  projectId: string;
-  amount: string;
-  dueDate: Date | undefined;
-  paymentType: string;
-  description: string;
-  invoiceNumber: string;
-}
-
-// Mock clients data for dropdowns
-const mockClients = [
-  { id: "1", name: "TechStart Solutions", contact: "Sarah Johnson" },
-  { id: "2", name: "Digital Dynamics", contact: "Michael Chen" },
-  { id: "3", name: "Innovation Labs", contact: "Emily Rodriguez" },
-  { id: "4", name: "Future Systems", contact: "David Kim" },
-];
-
-// Mock projects data for payments
-const mockProjects = [
-  { id: "1", name: "AI Implementation", clientId: "1" },
-  { id: "2", name: "Website Redesign", clientId: "1" },
-  { id: "3", name: "CRM Integration", clientId: "2" },
-  { id: "4", name: "Mobile App", clientId: "3" },
-];
-
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -277,151 +214,6 @@ const MetricCard = ({
 
 export default function AdminDashboard() {
   const { toast } = useToast();
-  
-  // Quick Actions State Management
-  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
-  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
-  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-  const [projectStep, setProjectStep] = useState(1);
-  
-  // Form Data States
-  const [clientForm, setClientForm] = useState<ClientFormData>({
-    name: "",
-    company: "",
-    email: "",
-    phone: "",
-    logoUrl: "",
-    status: "Active",
-  });
-  
-  const [projectForm, setProjectForm] = useState<ProjectFormData>({
-    name: "",
-    clientId: "",
-    description: "",
-    startDate: undefined,
-    endDate: undefined,
-    projectType: "AI Implementation",
-    duration: "4 weeks",
-    employeeCount: 10,
-    hoursPerEmployee: 2,
-    costPerHour: 50,
-    priority: "Medium",
-  });
-  
-  const [paymentForm, setPaymentForm] = useState<PaymentFormData>({
-    clientId: "",
-    projectId: "",
-    amount: "",
-    dueDate: undefined,
-    paymentType: "Initial",
-    description: "",
-    invoiceNumber: "",
-  });
-  
-  const [clientErrors, setClientErrors] = useState<Partial<ClientFormData>>({});
-  
-  // Quick Actions Handlers
-  const handleClientSubmit = () => {
-    const errors: Partial<ClientFormData> = {};
-    if (!clientForm.name.trim()) errors.name = "Contact person is required";
-    if (!clientForm.company.trim()) errors.company = "Company name is required";
-    if (!clientForm.email.trim()) {
-      errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(clientForm.email)) {
-      errors.email = "Invalid email format";
-    }
-    
-    setClientErrors(errors);
-    
-    if (Object.keys(errors).length === 0) {
-      toast({
-        title: "Client added successfully",
-        description: `${clientForm.company} has been added to your client list.`,
-      });
-      setIsClientDialogOpen(false);
-      resetClientForm();
-    }
-  };
-  
-  const handleProjectSubmit = () => {
-    toast({
-      title: "Project created successfully",
-      description: `${projectForm.name} has been created and scheduled.`,
-    });
-    setIsProjectDialogOpen(false);
-    setProjectStep(1);
-    resetProjectForm();
-  };
-  
-  const handlePaymentSubmit = () => {
-    toast({
-      title: "Payment recorded successfully",
-      description: `Payment of ${paymentForm.amount} has been scheduled.`,
-    });
-    setIsPaymentDialogOpen(false);
-    resetPaymentForm();
-  };
-  
-  const resetClientForm = () => {
-    setClientForm({
-      name: "",
-      company: "",
-      email: "",
-      phone: "",
-      logoUrl: "",
-      status: "Active",
-    });
-    setClientErrors({});
-  };
-  
-  const resetProjectForm = () => {
-    setProjectForm({
-      name: "",
-      clientId: "",
-      description: "",
-      startDate: undefined,
-      endDate: undefined,
-      projectType: "AI Implementation",
-      duration: "4 weeks",
-      employeeCount: 10,
-      hoursPerEmployee: 2,
-      costPerHour: 50,
-      priority: "Medium",
-    });
-  };
-  
-  const resetPaymentForm = () => {
-    setPaymentForm({
-      clientId: "",
-      projectId: "",
-      amount: "",
-      dueDate: undefined,
-      paymentType: "Initial",
-      description: "",
-      invoiceNumber: "",
-    });
-  };
-  
-  // ROI Calculation
-  const calculateROI = () => {
-    const dailyROI = projectForm.employeeCount * projectForm.hoursPerEmployee * projectForm.costPerHour;
-    const monthlyROI = dailyROI * 22; // Working days per month
-    const yearlyROI = monthlyROI * 12;
-    const implementationFee = 1500;
-    const netYearlyROI = yearlyROI - implementationFee;
-    
-    return {
-      daily: dailyROI,
-      monthly: monthlyROI,
-      yearly: yearlyROI,
-      netYearly: netYearlyROI,
-    };
-  };
-  
-  const roi = calculateROI();
-  
-  // Filter projects by selected client
-  const availableProjects = mockProjects.filter(project => project.clientId === paymentForm.clientId);
   
   return (
     <div className="space-y-6">
@@ -519,528 +311,18 @@ export default function AdminDashboard() {
         </Link>
       </div>
 
-      {/* Quick Actions Panel */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-foreground">Quick Actions</CardTitle>
-          <CardDescription>Streamlined access to common administrative tasks</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {/* Add New Client */}
-            <Dialog open={isClientDialogOpen} onOpenChange={setIsClientDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  size="lg" 
-                  className="h-24 flex flex-col gap-2 bg-primary hover:bg-primary/90"
-                  onClick={resetClientForm}
-                >
-                  <UserPlus className="h-6 w-6" />
-                  <span>Add New Client</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Quick Add Client</DialogTitle>
-                  <DialogDescription>
-                    Create a new client profile for your agency.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="company">Company Name *</Label>
-                    <Input
-                      id="company"
-                      value={clientForm.company}
-                      onChange={(e) => setClientForm(prev => ({ ...prev, company: e.target.value }))}
-                      className={clientErrors.company ? "border-destructive" : ""}
-                    />
-                    {clientErrors.company && (
-                      <p className="text-sm text-destructive">{clientErrors.company}</p>
-                    )}
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Contact Person *</Label>
-                    <Input
-                      id="name"
-                      value={clientForm.name}
-                      onChange={(e) => setClientForm(prev => ({ ...prev, name: e.target.value }))}
-                      className={clientErrors.name ? "border-destructive" : ""}
-                    />
-                    {clientErrors.name && (
-                      <p className="text-sm text-destructive">{clientErrors.name}</p>
-                    )}
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={clientForm.email}
-                      onChange={(e) => setClientForm(prev => ({ ...prev, email: e.target.value }))}
-                      className={clientErrors.email ? "border-destructive" : ""}
-                    />
-                    {clientErrors.email && (
-                      <p className="text-sm text-destructive">{clientErrors.email}</p>
-                    )}
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      value={clientForm.phone}
-                      onChange={(e) => setClientForm(prev => ({ ...prev, phone: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="status"
-                      checked={clientForm.status === "Active"}
-                      onCheckedChange={(checked) => 
-                        setClientForm(prev => ({ ...prev, status: checked ? "Active" : "Inactive" }))
-                      }
-                    />
-                    <Label htmlFor="status">Active Status</Label>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsClientDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleClientSubmit}>Add Client</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Create Project */}
-            <Dialog open={isProjectDialogOpen} onOpenChange={setIsProjectDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  size="lg" 
-                  variant="secondary"
-                  className="h-24 flex flex-col gap-2"
-                  onClick={() => { resetProjectForm(); setProjectStep(1); }}
-                >
-                  <FolderPlus className="h-6 w-6" />
-                  <span>Create Project</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Project - Step {projectStep} of 3</DialogTitle>
-                  <DialogDescription>
-                    {projectStep === 1 && "Enter basic project information"}
-                    {projectStep === 2 && "Configure project phases and timeline"}
-                    {projectStep === 3 && "Set up ROI calculations and settings"}
-                  </DialogDescription>
-                </DialogHeader>
-                
-                {/* Step 1: Basic Info */}
-                {projectStep === 1 && (
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="projectName">Project Name *</Label>
-                      <Input
-                        id="projectName"
-                        value={projectForm.name}
-                        onChange={(e) => setProjectForm(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="AI Implementation Project"
-                      />
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="clientSelect">Client *</Label>
-                      <Select 
-                        value={projectForm.clientId} 
-                        onValueChange={(value) => setProjectForm(prev => ({ ...prev, clientId: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a client" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mockClients.map((client) => (
-                            <SelectItem key={client.id} value={client.id}>
-                              {client.name} ({client.contact})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={projectForm.description}
-                        onChange={(e) => setProjectForm(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Brief project description..."
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="startDate">Start Date</Label>
-                        <Input
-                          id="startDate"
-                          type="date"
-                          value={projectForm.startDate ? format(projectForm.startDate, 'yyyy-MM-dd') : ''}
-                          onChange={(e) => setProjectForm(prev => ({ 
-                            ...prev, 
-                            startDate: e.target.value ? new Date(e.target.value) : undefined 
-                          }))}
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="endDate">End Date</Label>
-                        <Input
-                          id="endDate"
-                          type="date"
-                          value={projectForm.endDate ? format(projectForm.endDate, 'yyyy-MM-dd') : ''}
-                          onChange={(e) => setProjectForm(prev => ({ 
-                            ...prev, 
-                            endDate: e.target.value ? new Date(e.target.value) : undefined 
-                          }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Step 2: Project Phases */}
-                {projectStep === 2 && (
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="projectType">Project Type</Label>
-                      <Select 
-                        value={projectForm.projectType} 
-                        onValueChange={(value) => setProjectForm(prev => ({ ...prev, projectType: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="AI Implementation">AI Implementation</SelectItem>
-                          <SelectItem value="Website Redesign">Website Redesign</SelectItem>
-                          <SelectItem value="CRM Integration">CRM Integration</SelectItem>
-                          <SelectItem value="Mobile App">Mobile App Development</SelectItem>
-                          <SelectItem value="Custom">Custom Project</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="duration">Duration</Label>
-                      <Select 
-                        value={projectForm.duration} 
-                        onValueChange={(value) => setProjectForm(prev => ({ ...prev, duration: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="2 weeks">2 weeks</SelectItem>
-                          <SelectItem value="4 weeks">4 weeks (Standard)</SelectItem>
-                          <SelectItem value="8 weeks">8 weeks</SelectItem>
-                          <SelectItem value="12 weeks">12 weeks</SelectItem>
-                          <SelectItem value="custom">Custom</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-3 p-4 bg-muted rounded-lg">
-                      <h4 className="font-medium">Standard Project Phases:</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                          <span>Week 1: Setup & Info Collection</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                          <span>Week 2-3: Implementation & Development</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                          <span>Week 4: Testing & Go-Live</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="priority">Priority Level</Label>
-                      <Select 
-                        value={projectForm.priority} 
-                        onValueChange={(value) => setProjectForm(prev => ({ ...prev, priority: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Low">Low</SelectItem>
-                          <SelectItem value="Medium">Medium</SelectItem>
-                          <SelectItem value="High">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Step 3: ROI Configuration */}
-                {projectStep === 3 && (
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="employeeCount">Number of Employees</Label>
-                      <Input
-                        id="employeeCount"
-                        type="number"
-                        value={projectForm.employeeCount}
-                        onChange={(e) => setProjectForm(prev => ({ 
-                          ...prev, 
-                          employeeCount: parseInt(e.target.value) || 0 
-                        }))}
-                        min="1"
-                      />
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="hoursPerEmployee">
-                        Hours spent on repetitive tasks per employee per day: {projectForm.hoursPerEmployee}
-                      </Label>
-                      <Slider
-                        id="hoursPerEmployee"
-                        min={1}
-                        max={8}
-                        step={0.5}
-                        value={[projectForm.hoursPerEmployee]}
-                        onValueChange={(value) => setProjectForm(prev => ({ 
-                          ...prev, 
-                          hoursPerEmployee: value[0] 
-                        }))}
-                        className="py-4"
-                      />
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="costPerHour">Cost per hour per employee ($)</Label>
-                      <Input
-                        id="costPerHour"
-                        type="number"
-                        value={projectForm.costPerHour}
-                        onChange={(e) => setProjectForm(prev => ({ 
-                          ...prev, 
-                          costPerHour: parseFloat(e.target.value) || 0 
-                        }))}
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                    
-                    <div className="space-y-3 p-4 bg-muted rounded-lg">
-                      <h4 className="font-medium">ROI Calculation Preview:</h4>
-                      <div className="space-y-1 text-sm">
-                        <p>Daily savings: <strong>{formatCurrency(roi.daily)}</strong></p>
-                        <p>Monthly savings: <strong>{formatCurrency(roi.monthly)}</strong></p>
-                        <p>Yearly savings: <strong>{formatCurrency(roi.yearly)}</strong></p>
-                        <p className="text-muted-foreground">Implementation fee: ${formatCurrency(1500)}</p>
-                        <p className="text-success font-medium">
-                          Net yearly ROI: <strong>{formatCurrency(roi.netYearly)}</strong>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <DialogFooter>
-                  <div className="flex w-full justify-between">
-                    <div>
-                      {projectStep > 1 && (
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setProjectStep(prev => prev - 1)}
-                        >
-                          <ChevronLeft className="h-4 w-4 mr-1" />
-                          Previous
-                        </Button>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setIsProjectDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      {projectStep < 3 ? (
-                        <Button onClick={() => setProjectStep(prev => prev + 1)}>
-                          Next
-                          <ChevronRight className="h-4 w-4 ml-1" />
-                        </Button>
-                      ) : (
-                        <Button onClick={handleProjectSubmit}>
-                          Create Project
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Record Payment */}
-            <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="h-24 flex flex-col gap-2 border-success text-success hover:bg-success/10"
-                  onClick={resetPaymentForm}
-                >
-                  <DollarSignIcon className="h-6 w-6" />
-                  <span>Record Payment</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Quick Payment Entry</DialogTitle>
-                  <DialogDescription>
-                    Record a new payment for a client project.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="paymentClient">Client *</Label>
-                    <Select 
-                      value={paymentForm.clientId} 
-                      onValueChange={(value) => setPaymentForm(prev => ({ 
-                        ...prev, 
-                        clientId: value,
-                        projectId: "" // Reset project when client changes
-                      }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a client" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockClients.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="paymentProject">Project *</Label>
-                    <Select 
-                      value={paymentForm.projectId} 
-                      onValueChange={(value) => setPaymentForm(prev => ({ ...prev, projectId: value }))}
-                      disabled={!paymentForm.clientId}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableProjects.map((project) => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="amount">Amount ($) *</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        value={paymentForm.amount}
-                        onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
-                        placeholder="15000"
-                        step="0.01"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="paymentDueDate">Due Date</Label>
-                      <Input
-                        id="paymentDueDate"
-                        type="date"
-                        value={paymentForm.dueDate ? format(paymentForm.dueDate, 'yyyy-MM-dd') : ''}
-                        onChange={(e) => setPaymentForm(prev => ({ 
-                          ...prev, 
-                          dueDate: e.target.value ? new Date(e.target.value) : undefined 
-                        }))}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="paymentType">Payment Type</Label>
-                    <Select 
-                      value={paymentForm.paymentType} 
-                      onValueChange={(value) => setPaymentForm(prev => ({ ...prev, paymentType: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Initial">Initial Payment</SelectItem>
-                        <SelectItem value="Monthly">Monthly Payment</SelectItem>
-                        <SelectItem value="Final">Final Payment</SelectItem>
-                        <SelectItem value="Custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="paymentDescription">Description</Label>
-                    <Input
-                      id="paymentDescription"
-                      value={paymentForm.description}
-                      onChange={(e) => setPaymentForm(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Payment for project milestone..."
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="invoiceNumber">Invoice Number (Optional)</Label>
-                    <Input
-                      id="invoiceNumber"
-                      value={paymentForm.invoiceNumber}
-                      onChange={(e) => setPaymentForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
-                      placeholder="INV-2024-001"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handlePaymentSubmit}>Record Payment</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Generate Report */}
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="h-24 flex flex-col gap-2 border-purple-500 text-purple-600 hover:bg-purple-50 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-950/20"
-              onClick={() => {
-                toast({
-                  title: "Report generation coming soon",
-                  description: "Advanced reporting features will be available in the next update.",
-                });
-              }}
-            >
-              <BarChart3 className="h-6 w-6" />
-              <span>Generate Report</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Quick Actions Section */}
+      <QuickActionsWidget
+        onClientAdded={(client) => {
+          console.log("Client added:", client);
+        }}
+        onProjectCreated={(project) => {
+          console.log("Project created:", project);
+        }}
+        onPaymentRecorded={(payment) => {
+          console.log("Payment recorded:", payment);
+        }}
+      />
 
       {/* Recent Actions & Shortcuts */}
       <div className="grid gap-6 lg:grid-cols-2">
