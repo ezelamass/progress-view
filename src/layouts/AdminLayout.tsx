@@ -62,7 +62,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen w-full bg-background">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -74,8 +74,8 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-card border-r border-border transition-transform lg:translate-x-0 lg:static lg:inset-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         <div className="flex h-full flex-col">
@@ -120,7 +120,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="flex flex-1 flex-col">
         {/* Top header */}
         <header className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
           <Button
@@ -177,7 +177,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main className="p-6">
+        <main className="flex-1 p-6">
           <Outlet />
         </main>
       </div>
