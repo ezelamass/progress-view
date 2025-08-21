@@ -20,7 +20,10 @@ const Index = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* ROI Card */}
+          {/* Quick Actions - Top Position */}
+          <QuickActions />
+          
+          {/* ROI Visualizer */}
           <ROICard />
           
           {/* Project Progress */}
@@ -29,43 +32,52 @@ const Index = () => {
 
         {/* Right Column - Sidebar Content */}
         <div className="space-y-6">
-          {/* Quick Actions */}
-          <QuickActions />
-          
           {/* Recent Activity */}
           <RecentActivity />
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <div className="bg-gradient-card border border-border/50 rounded-lg p-6 shadow-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Savings</p>
-              <p className="text-2xl font-bold text-foreground">$47,250</p>
+          
+          {/* Statistics */}
+          <div className="bg-card border border-border/50 rounded-lg p-6">
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-muted-foreground">Statistics</h3>
+              <p className="text-xs text-muted-foreground">Key performance metrics</p>
             </div>
-            <div className="text-success text-sm font-medium">+15.2%</div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-card border border-border/50 rounded-lg p-6 shadow-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Efficiency Gain</p>
-              <p className="text-2xl font-bold text-foreground">78%</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                  <span className="text-sm text-foreground">2,847</span>
+                </div>
+                <div className="text-xs text-success">↗ 12.5%</div>
+              </div>
+              <p className="text-xs text-muted-foreground">Total Users</p>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <span className="text-sm text-foreground">$45,231</span>
+                </div>
+                <div className="text-xs text-success">↗ 8.2%</div>
+              </div>
+              <p className="text-xs text-muted-foreground">Revenue</p>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                  <span className="text-sm text-foreground">3.24%</span>
+                </div>
+                <div className="text-xs text-red-500">↓ 2.1%</div>
+              </div>
+              <p className="text-xs text-muted-foreground">Conversion Rate</p>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+                  <span className="text-sm text-foreground">1,234</span>
+                </div>
+                <div className="text-xs text-success">↗ 16.3%</div>
+              </div>
+              <p className="text-xs text-muted-foreground">Active Sessions</p>
             </div>
-            <div className="text-success text-sm font-medium">+8.1%</div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-card border border-border/50 rounded-lg p-6 shadow-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Next Milestone</p>
-              <p className="text-2xl font-bold text-foreground">Feb 28</p>
-            </div>
-            <div className="text-primary text-sm font-medium">12 days</div>
           </div>
         </div>
       </div>

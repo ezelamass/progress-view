@@ -1,102 +1,76 @@
-import { Calendar, FileText, CreditCard, Folder } from "lucide-react";
+import { Calendar, FileText, Folder, GraduationCap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 const QuickActions = () => {
-  const paymentHistory = [
-    { date: "Jan 15, 2024", amount: "$5,000", status: "Paid", method: "Bank Transfer" },
-    { date: "Dec 15, 2023", amount: "$5,000", status: "Paid", method: "Bank Transfer" },
-    { date: "Nov 15, 2023", amount: "$5,000", status: "Paid", method: "Credit Card" },
-    { date: "Oct 15, 2023", amount: "$5,000", status: "Paid", method: "Bank Transfer" },
-  ];
-
   const actions = [
     {
       icon: Calendar,
       label: "Schedule Follow-up",
-      description: "Book a meeting",
+      description: "Book a new meeting with team members",
       action: () => window.open("https://calendly.com", "_blank"),
-      variant: "default" as const,
+      primary: true,
     },
     {
       icon: FileText,
-      label: "View Deliverables",
-      description: "See project outputs",
+      label: "View Deliverables", 
+      description: "Check project deliverables and milestones",
       action: () => console.log("Navigate to deliverables"),
-      variant: "outline" as const,
+      primary: false,
     },
     {
       icon: Folder,
       label: "Manage Files",
-      description: "Access project files",
+      description: "Upload, organize and share project files",
       action: () => window.open("https://drive.google.com", "_blank"),
-      variant: "outline" as const,
+      primary: false,
+    },
+    {
+      icon: GraduationCap,
+      label: "Learn Section",
+      description: "Access tutorials and documentation", 
+      action: () => console.log("Coming soon"),
+      primary: false,
+      comingSoon: true,
     },
   ];
 
   return (
-    <Card className="bg-gradient-card border-border/50 shadow-card">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-foreground">Quick Actions</CardTitle>
+    <Card className="bg-card border-border/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium text-muted-foreground">Quick Actions</CardTitle>
+        <p className="text-xs text-muted-foreground">Frequently used actions and shortcuts</p>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {actions.map((action, index) => (
-          <Button
-            key={index}
-            variant={action.variant}
-            className="w-full justify-start h-auto p-4"
-            onClick={action.action}
-          >
-            <action.icon className="h-5 w-5 mr-3" />
-            <div className="text-left">
-              <div className="font-medium">{action.label}</div>
-              <div className="text-xs text-muted-foreground">{action.description}</div>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-3">
+          {actions.map((action, index) => (
+            <div key={index} className="relative">
+              <Button
+                variant="ghost"
+                className={`w-full h-20 p-4 flex flex-col items-center justify-center gap-2 rounded-lg border transition-all ${
+                  action.primary 
+                    ? "bg-gradient-to-r from-purple-600 to-purple-700 text-white border-purple-600 hover:from-purple-700 hover:to-purple-800" 
+                    : "bg-muted/30 text-foreground border-border hover:bg-muted/50"
+                }`}
+                onClick={action.action}
+              >
+                <action.icon className="h-5 w-5" />
+                <span className="text-xs font-medium text-center leading-tight">
+                  {action.label}
+                </span>
+              </Button>
+              {action.comingSoon && (
+                <Badge 
+                  variant="secondary" 
+                  className="absolute -top-1 -right-1 text-xs px-2 py-0 bg-muted text-muted-foreground"
+                >
+                  Coming Soon
+                </Badge>
+              )}
             </div>
-          </Button>
-        ))}
-        
-        {/* Payment History Dialog */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="w-full justify-start h-auto p-4">
-              <CreditCard className="h-5 w-5 mr-3" />
-              <div className="text-left">
-                <div className="font-medium">Payment History</div>
-                <div className="text-xs text-muted-foreground">View all transactions</div>
-              </div>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Payment History</DialogTitle>
-              <DialogDescription>
-                Complete record of all payments and transactions
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              {paymentHistory.map((payment, index) => (
-                <div key={index} className="flex items-center justify-between p-4 rounded-lg border border-border bg-card/50">
-                  <div>
-                    <div className="font-medium text-foreground">{payment.amount}</div>
-                    <div className="text-sm text-muted-foreground">{payment.date}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-success">{payment.status}</div>
-                    <div className="text-xs text-muted-foreground">{payment.method}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
