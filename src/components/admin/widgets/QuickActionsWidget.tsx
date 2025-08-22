@@ -3,18 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AddClientButton from "../buttons/AddClientButton";
 import CreateProjectButton from "../buttons/CreateProjectButton";
 import RecordPaymentButton from "../buttons/RecordPaymentButton";
+import AddDeliverableButton from "../buttons/AddDeliverableButton";
 import { Zap } from "lucide-react";
 
 interface QuickActionsWidgetProps {
   onClientAdded?: (client: any) => void;
   onProjectCreated?: (project: any) => void;
   onPaymentRecorded?: (payment: any) => void;
+  onDeliverableAdded?: (deliverable: any) => void;
 }
 
 export default function QuickActionsWidget({
   onClientAdded,
   onProjectCreated,
-  onPaymentRecorded
+  onPaymentRecorded,
+  onDeliverableAdded
 }: QuickActionsWidgetProps) {
   return (
     <Card>
@@ -25,7 +28,7 @@ export default function QuickActionsWidget({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Add New Client */}
           <div className="flex flex-col">
             <AddClientButton 
@@ -65,6 +68,20 @@ export default function QuickActionsWidget({
             </RecordPaymentButton>
             <p className="text-sm text-muted-foreground mt-2">
               Log incoming payments and track financial progress
+            </p>
+          </div>
+
+          {/* Add Deliverable */}
+          <div className="flex flex-col">
+            <AddDeliverableButton
+              onDeliverableAdded={onDeliverableAdded}
+              variant="outline"
+              size="default"
+            >
+              Add Deliverable
+            </AddDeliverableButton>
+            <p className="text-sm text-muted-foreground mt-2">
+              Create project deliverables and track milestones
             </p>
           </div>
         </div>

@@ -9,11 +9,13 @@ import Index from "./pages/Index";
 import Calendar from "./pages/Calendar";
 import Payments from "./pages/Payments";
 import Help from "./pages/Help";
+import Deliverables from "./pages/Deliverables";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ClientManagement from "./pages/admin/ClientManagement";
 import ProjectManagement from "./pages/admin/ProjectManagement";
 import PaymentManagement from "./pages/admin/PaymentManagement";
+import DeliverableManagement from "./pages/admin/DeliverableManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 
 const queryClient = new QueryClient();
@@ -22,7 +24,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   
   // Show header on main app routes (but not admin routes)
-  const showHeader = ['/', '/calendar', '/help'].includes(location.pathname);
+  const showHeader = ['/', '/calendar', '/deliverables', '/help'].includes(location.pathname);
   
   return (
     <div className="min-h-screen bg-background">
@@ -44,6 +46,7 @@ const App = () => (
           {/* Client Routes */}
           <Route path="/" element={<MainLayout><Index /></MainLayout>} />
           <Route path="/calendar" element={<MainLayout><Calendar /></MainLayout>} />
+          <Route path="/deliverables" element={<MainLayout><Deliverables /></MainLayout>} />
           <Route path="/payments" element={<MainLayout><Payments /></MainLayout>} />
           <Route path="/help" element={<MainLayout><Help /></MainLayout>} />
           
@@ -52,6 +55,7 @@ const App = () => (
             <Route index element={<AdminDashboard />} />
             <Route path="clients" element={<ClientManagement />} />
             <Route path="projects" element={<ProjectManagement />} />
+            <Route path="deliverables" element={<DeliverableManagement />} />
             <Route path="payments" element={<PaymentManagement />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>

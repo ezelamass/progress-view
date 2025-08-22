@@ -4,6 +4,7 @@ import {
   LayoutDashboard, 
   Users, 
   FolderKanban, 
+  CheckSquare,
   CreditCard, 
   Settings,
   Menu,
@@ -40,6 +41,11 @@ const adminNavItems = [
     title: "Projects",
     href: "/admin/projects",
     icon: FolderKanban,
+  },
+  {
+    title: "Deliverables",
+    href: "/admin/deliverables",
+    icon: CheckSquare,
   },
   {
     title: "Payments",

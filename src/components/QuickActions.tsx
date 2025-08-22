@@ -1,4 +1,4 @@
-import { Calendar, FileText, Folder, GraduationCap } from "lucide-react";
+import { Calendar, FileText, Folder, GraduationCap, CheckSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,10 +19,10 @@ const QuickActions = ({ project }: QuickActionsProps) => {
       primary: true,
     },
     {
-      icon: FileText,
+      icon: CheckSquare,
       label: "View Deliverables", 
       description: "Check project deliverables and milestones",
-      action: () => console.log("Navigate to deliverables"),
+      action: () => window.location.href = "/deliverables",
       primary: false,
     },
     {
