@@ -297,7 +297,7 @@ export default function ProjectManagement() {
     }
   };
 
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = (projects || []).filter(project => {
     const matchesSearch = project.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.clients?.company?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || project.status === statusFilter;
@@ -439,7 +439,7 @@ export default function ProjectManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Clients</SelectItem>
-                {clients.map(client => (
+                {(clients || []).map(client => (
                   <SelectItem key={client.id} value={client.id}>
                     {client.company}
                   </SelectItem>
@@ -568,7 +568,7 @@ export default function ProjectManagement() {
               <div className="h-2 w-2 rounded-full bg-primary" />
               <span className="text-sm text-muted-foreground">Total Projects</span>
             </div>
-            <p className="text-2xl font-bold text-foreground mt-1">{projects.length}</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{(projects || []).length}</p>
           </CardContent>
         </Card>
         <Card>
@@ -578,7 +578,7 @@ export default function ProjectManagement() {
               <span className="text-sm text-muted-foreground">Completed</span>
             </div>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {projects.filter(p => p.status === 'completed').length}
+              {(projects || []).filter(p => p.status === 'completed').length}
             </p>
           </CardContent>
         </Card>
@@ -589,7 +589,7 @@ export default function ProjectManagement() {
               <span className="text-sm text-muted-foreground">In Progress</span>
             </div>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {projects.filter(p => p.status === 'active' || p.status === 'in progress').length}
+              {(projects || []).filter(p => p.status === 'active' || p.status === 'in progress').length}
             </p>
           </CardContent>
         </Card>
@@ -600,7 +600,7 @@ export default function ProjectManagement() {
               <span className="text-sm text-muted-foreground">On Hold</span>
             </div>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {projects.filter(p => p.status === 'on hold' || p.status === 'paused').length}
+              {(projects || []).filter(p => p.status === 'on hold' || p.status === 'paused').length}
             </p>
           </CardContent>
         </Card>
@@ -649,7 +649,7 @@ export default function ProjectManagement() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {clients.map(client => (
+                            {(clients || []).map(client => (
                               <SelectItem key={client.id} value={client.id}>
                                 {client.company}
                               </SelectItem>
