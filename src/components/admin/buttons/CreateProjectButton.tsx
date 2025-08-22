@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -8,43 +8,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
-import { Plus, FolderPlus, ArrowLeft, ArrowRight } from "lucide-react";
+import { Plus, FolderPlus, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock clients data - in real app this would come from props or context
-const mockClients = [
-  { id: 1, name: "TechStart Solutions" },
-  { id: 2, name: "Digital Dynamics" },
-  { id: 3, name: "Innovation Labs" },
-  { id: 4, name: "Future Systems" },
-  { id: 5, name: "Growth Partners" }
-];
+interface Client {
+  id: string;
+  company: string;
+  name: string;
+  email: string;
+}
 
 interface Project {
-  id: number;
+  id: string;
   name: string;
-  client: string;
-  clientId: number;
-  clientAvatar: string;
+  client_id: string;
   status: string;
-  progress: number;
-  startDate: string;
-  endDate: string;
+  progress_percentage: number;
+  start_date: string;
+  end_date: string;
   description: string;
-  phases: Array<{
-    name: string;
-    status: string;
-    duration: number;
-  }>;
-  roiConfig: {
-    employeeCount: number;
-    hoursPerEmployee: number;
-    costPerHour: number;
+  roi_config: {
+    employees: number;
+    hourlyRate: number;
+    hoursSaved: number;
   };
-  currentPhase: string;
 }
 
 interface CreateProjectButtonProps {
-  onProjectCreated?: (project: Project) => void;
+  onProjectCreated?: () => void;
   variant?: "default" | "outline" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
   icon?: boolean;
@@ -60,31 +51,56 @@ export default function CreateProjectButton({
 }: CreateProjectButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dialogStep, setDialogStep] = useState(1);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchingClients, setFetchingClients] = useState(true);
+
+  // Fetch clients on component mount
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('clients')
+          .select('id, company, name, email')
+          .eq('status', 'active')
+          .order('company', { ascending: true });
+
+        if (error) throw error;
+        setClients(data || []);
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load clients. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setFetchingClients(false);
+      }
+    };
+
+    fetchClients();
+  }, []);
 
   const form = useForm({
     defaultValues: {
       name: "",
-      clientId: "",
+      client_id: "",
       description: "",
-      startDate: "",
-      endDate: "",
-      phases: [
-        { name: "Week 1: Setup & Info Collection", duration: 7 },
-        { name: "Week 2-3: Implementation & Development", duration: 14 },
-        { name: "Week 4: Testing & Go-Live", duration: 7 }
-      ],
+      start_date: "",
+      end_date: "",
       roiConfig: {
-        employeeCount: 10,
-        hoursPerEmployee: 2,
-        costPerHour: 30
+        employees: 10,
+        hourlyRate: 50,
+        hoursSaved: 2
       },
-      status: "Planning",
-      progress: 0
+      status: "active" as const,
+      progress_percentage: 0
     }
   });
 
-  const calculateROI = (employeeCount: number, hoursPerEmployee: number, costPerHour: number) => {
-    const dailyROI = employeeCount * hoursPerEmployee * costPerHour;
+  const calculateROI = (employees: number, hoursSaved: number, hourlyRate: number) => {
+    const dailyROI = employees * hoursSaved * hourlyRate;
     const monthlyROI = dailyROI * 22; // 22 working days per month
     const yearlyROI = monthlyROI * 12;
     const monthlyROIAfterFees = monthlyROI - 1500; // Subtract implementation fee
@@ -97,32 +113,48 @@ export default function CreateProjectButton({
     };
   };
 
-  const handleCreateProject = (values: any) => {
-    const client = mockClients.find(c => c.id.toString() === values.clientId);
-    
-    const newProject: Project = {
-      ...values,
-      id: Date.now(),
-      client: client?.name || "",
-      clientAvatar: "/placeholder.jpg",
-      currentPhase: values.phases[0].name,
-      phases: values.phases.map((phase: any, index: number) => ({
-        ...phase,
-        status: index === 0 ? "in-progress" : "pending"
-      }))
-    };
-    
-    // Call callback if provided
-    if (onProjectCreated) {
-      onProjectCreated(newProject);
+  const handleCreateProject = async (values: any) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([{
+          name: values.name,
+          client_id: values.client_id,
+          description: values.description,
+          start_date: values.start_date,
+          end_date: values.end_date,
+          status: values.status,
+          progress_percentage: values.progress_percentage,
+          roi_config: values.roiConfig,
+          environment: 'production'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Project Created",
+        description: "New project has been created successfully.",
+      });
+
+      // Call callback if provided
+      if (onProjectCreated) {
+        onProjectCreated();
+      }
+
+      resetDialog();
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-
-    toast({
-      title: "Project Created",
-      description: "New project has been created successfully.",
-    });
-
-    resetDialog();
   };
 
   const resetDialog = () => {
@@ -132,7 +164,7 @@ export default function CreateProjectButton({
   };
 
   const roiValues = form.watch("roiConfig");
-  const roi = calculateROI(roiValues.employeeCount, roiValues.hoursPerEmployee, roiValues.costPerHour);
+  const roi = calculateROI(roiValues.employees, roiValues.hoursSaved, roiValues.hourlyRate);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -146,9 +178,8 @@ export default function CreateProjectButton({
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
-            Step {dialogStep} of 3: {
-              dialogStep === 1 ? 'Basic Information' :
-              dialogStep === 2 ? 'Project Phases' : 'ROI Configuration'
+            Step {dialogStep} of 2: {
+              dialogStep === 1 ? 'Basic Information' : 'ROI Configuration'
             }
           </DialogDescription>
         </DialogHeader>
@@ -172,20 +203,20 @@ export default function CreateProjectButton({
                 />
                 <FormField
                   control={form.control}
-                  name="clientId"
+                  name="client_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Client</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={fetchingClients}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a client" />
+                            <SelectValue placeholder={fetchingClients ? "Loading clients..." : "Select a client"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {mockClients.map(client => (
-                            <SelectItem key={client.id} value={client.id.toString()}>
-                              {client.name}
+                          {clients.map(client => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.company} - {client.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -213,7 +244,7 @@ export default function CreateProjectButton({
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="startDate"
+                    name="start_date"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Start Date</FormLabel>
@@ -226,7 +257,7 @@ export default function CreateProjectButton({
                   />
                   <FormField
                     control={form.control}
-                    name="endDate"
+                    name="end_date"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>End Date</FormLabel>
@@ -242,48 +273,6 @@ export default function CreateProjectButton({
             )}
 
             {dialogStep === 2 && (
-              <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  Configure project phases and their durations. Default phases based on Client Hub standard workflow.
-                </div>
-                {form.watch("phases").map((phase: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <FormField
-                      control={form.control}
-                      name={`phases.${index}.name`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phase {index + 1} Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`phases.${index}.duration`}
-                      render={({ field }) => (
-                        <FormItem className="mt-2">
-                          <FormLabel>Duration (days)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {dialogStep === 3 && (
               <div className="space-y-6">
                 <div className="text-sm text-muted-foreground">
                   Configure ROI calculation parameters to estimate monthly savings for the client.
@@ -291,7 +280,7 @@ export default function CreateProjectButton({
                 
                 <FormField
                   control={form.control}
-                  name="roiConfig.employeeCount"
+                  name="roiConfig.employees"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Employee Count</FormLabel>
@@ -312,7 +301,7 @@ export default function CreateProjectButton({
 
                 <FormField
                   control={form.control}
-                  name="roiConfig.hoursPerEmployee"
+                  name="roiConfig.hoursSaved"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Hours Saved Per Employee Daily</FormLabel>
@@ -342,7 +331,7 @@ export default function CreateProjectButton({
 
                 <FormField
                   control={form.control}
-                  name="roiConfig.costPerHour"
+                  name="roiConfig.hourlyRate"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cost Per Hour Per Employee ($)</FormLabel>
@@ -392,13 +381,13 @@ export default function CreateProjectButton({
                   type="button"
                   variant="outline"
                   onClick={() => setDialogStep(Math.max(1, dialogStep - 1))}
-                  disabled={dialogStep === 1}
+                  disabled={dialogStep === 1 || loading}
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Previous
                 </Button>
                 
-                {dialogStep < 3 ? (
+                {dialogStep < 2 ? (
                   <Button
                     type="button"
                     onClick={() => setDialogStep(dialogStep + 1)}
@@ -407,7 +396,8 @@ export default function CreateProjectButton({
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button type="submit">
+                  <Button type="submit" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Project
                   </Button>
                 )}

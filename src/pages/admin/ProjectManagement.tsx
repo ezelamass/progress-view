@@ -5,24 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Search, 
-  Plus, 
-  MoreHorizontal, 
-  Calendar,
-  Clock,
-  DollarSign,
-  Users,
-  Filter,
-  Edit,
-  Eye,
-  Trash2,
-  ArrowLeft,
-  ArrowRight,
-  TestTube,
-  Globe,
-  Loader2
-} from "lucide-react";
+import { Plus, Search, Filter, Eye, Edit, Trash2, Users, Calendar, Target, TrendingUp, Calendar as CalendarIcon, ArrowLeft, ArrowRight, User, Loader2, Globe, TestTube } from "lucide-react";
+import CreateProjectButton from "@/components/admin/buttons/CreateProjectButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -217,7 +201,6 @@ export default function ProjectManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
   const [deleteProject, setDeleteProject] = useState<any>(null);
   const [dialogStep, setDialogStep] = useState(1);
@@ -323,47 +306,6 @@ export default function ProjectManagement() {
     return matchesSearch && matchesStatus && matchesClient;
   });
 
-  const handleCreateProject = async (values: any) => {
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .insert({
-          name: values.name,
-          client_id: values.clientId,
-          description: values.description,
-          start_date: values.startDate,
-          end_date: values.endDate,
-          status: values.status.toLowerCase(),
-          progress_percentage: values.progress,
-          environment: values.environment,
-          drive_folder_url: values.driveFolderUrl,
-          roi_config: {
-            employees: values.roiConfig.employeeCount,
-            hourlyRate: values.roiConfig.costPerHour,
-            hoursSaved: values.roiConfig.hoursPerEmployee
-          }
-        });
-
-      if (error) throw error;
-
-      setIsCreateDialogOpen(false);
-      setDialogStep(1);
-      form.reset();
-      fetchProjects(); // Refresh the list
-      
-      toast({
-        title: "Project Created",
-        description: "New project has been created successfully.",
-      });
-    } catch (error) {
-      console.error('Error creating project:', error);
-      toast({
-        title: "Error creating project",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleEditProject = (project: any) => {
     setEditingProject(project);
@@ -457,7 +399,6 @@ export default function ProjectManagement() {
   };
 
   const resetDialog = () => {
-    setIsCreateDialogOpen(false);
     setEditingProject(null);
     setDialogStep(1);
     form.reset();
@@ -476,10 +417,7 @@ export default function ProjectManagement() {
             Track and manage all client projects from start to finish
           </p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create New Project
-        </Button>
+        <CreateProjectButton onProjectCreated={fetchProjects} />
       </div>
 
       {/* Filters */}
@@ -668,13 +606,11 @@ export default function ProjectManagement() {
         </Card>
       </div>
 
-      {/* Create/Edit Project Dialog */}
-      <Dialog open={isCreateDialogOpen || !!editingProject} onOpenChange={resetDialog}>
+      {/* Edit Project Dialog */}
+      <Dialog open={!!editingProject} onOpenChange={resetDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingProject ? 'Edit Project' : 'Create New Project'}
-            </DialogTitle>
+            <DialogTitle>Edit Project</DialogTitle>
             <DialogDescription>
               Step {dialogStep} of 3: {
                 dialogStep === 1 ? 'Basic Information' :
@@ -684,7 +620,7 @@ export default function ProjectManagement() {
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(editingProject ? handleUpdateProject : handleCreateProject)}>
+            <form onSubmit={form.handleSubmit(handleUpdateProject)}>
               {dialogStep === 1 && (
                 <div className="space-y-4">
                   <FormField

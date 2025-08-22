@@ -313,14 +313,14 @@ export default function AdminDashboard() {
 
       {/* Quick Actions Section */}
       <QuickActionsWidget
-        onClientAdded={(client) => {
-          console.log("Client added:", client);
+        onClientAdded={() => {
+          console.log("Client added");
         }}
-        onProjectCreated={(project) => {
-          console.log("Project created:", project);
+        onProjectCreated={() => {
+          console.log("Project created");
         }}
-        onPaymentRecorded={(payment) => {
-          console.log("Payment recorded:", payment);
+        onPaymentRecorded={() => {
+          console.log("Payment recorded");
         }}
       />
 

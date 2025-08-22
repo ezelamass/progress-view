@@ -7,10 +7,10 @@ import AddDeliverableButton from "../buttons/AddDeliverableButton";
 import { Zap } from "lucide-react";
 
 interface QuickActionsWidgetProps {
-  onClientAdded?: (client: any) => void;
-  onProjectCreated?: (project: any) => void;
-  onPaymentRecorded?: (payment: any) => void;
-  onDeliverableAdded?: (deliverable: any) => void;
+  onClientAdded?: () => void;
+  onProjectCreated?: () => void;
+  onPaymentRecorded?: () => void;
+  onDeliverableAdded?: () => void;
 }
 
 export default function QuickActionsWidget({
