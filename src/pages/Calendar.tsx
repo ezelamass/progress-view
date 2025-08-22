@@ -1,9 +1,11 @@
-import { ArrowLeft, ChevronLeft, ChevronRight, Calendar as CalendarIcon, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, Clock, AlertTriangle, Flag, Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { Deliverable as BaseDeliverable, mockDeliverables } from "@/types/deliverables";
 
 interface ProjectPhase {
   id: string;
@@ -16,19 +18,16 @@ interface ProjectPhase {
   color: string;
 }
 
-interface Deliverable {
-  id: string;
-  name: string;
-  description: string;
+interface CalendarDeliverable extends Omit<BaseDeliverable, 'dueDate'> {
   dueDate: Date;
-  status: 'pending' | 'completed' | 'overdue';
   phaseId: string;
-  priority: 'low' | 'medium' | 'high';
 }
 
 const Calendar = () => {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedPhase, setSelectedPhase] = useState<ProjectPhase | null>(null);
+  const [selectedDeliverable, setSelectedDeliverable] = useState<CalendarDeliverable | null>(null);
 
   // Mock data for project phases
   const projectPhases: ProjectPhase[] = [
@@ -64,45 +63,12 @@ const Calendar = () => {
     }
   ];
 
-  // Mock deliverables data
-  const deliverables: Deliverable[] = [
-    {
-      id: "d1",
-      name: "Requirements Document",
-      description: "Complete project requirements document",
-      dueDate: new Date(2024, 1, 7),
-      status: 'completed',
-      phaseId: "1",
-      priority: 'high'
-    },
-    {
-      id: "d2",
-      name: "API Integration",
-      description: "Third-party API integrations complete",
-      dueDate: new Date(2024, 1, 16),
-      status: 'completed',
-      phaseId: "2", 
-      priority: 'high'
-    },
-    {
-      id: "d3",
-      name: "Core Features",
-      description: "Main application features implemented",
-      dueDate: new Date(2024, 1, 20),
-      status: 'pending',
-      phaseId: "2",
-      priority: 'high'
-    },
-    {
-      id: "d4",
-      name: "QA Testing",
-      description: "Complete quality assurance testing",
-      dueDate: new Date(2024, 1, 28),
-      status: 'pending',
-      phaseId: "3",
-      priority: 'medium'
-    }
-  ];
+  // Convert mock deliverables to calendar format
+  const deliverables: CalendarDeliverable[] = mockDeliverables.map(deliverable => ({
+    ...deliverable,
+    dueDate: new Date(deliverable.dueDate),
+    phaseId: deliverable.projectId // Map projectId to phaseId for now
+  }));
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -174,6 +140,31 @@ const Calendar = () => {
     );
   };
 
+  const getDeliverableStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-500 border-green-600';
+      case 'overdue': return 'bg-red-500 border-red-600';
+      case 'in_progress': return 'bg-blue-500 border-blue-600';
+      default: return 'bg-gray-500 border-gray-600';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'text-red-500';
+      case 'medium': return 'text-yellow-500';
+      default: return 'text-green-500';
+    }
+  };
+
+  const handlePhaseClick = (phase: ProjectPhase) => {
+    setSelectedPhase(phase);
+  };
+
+  const handleDeliverableClick = (deliverable: CalendarDeliverable) => {
+    setSelectedDeliverable(deliverable);
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed': return <CheckCircle className="h-3 w-3" />;
@@ -182,13 +173,6 @@ const Calendar = () => {
     }
   };
 
-  const getDeliverableColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'overdue': return 'bg-red-500';
-      default: return 'bg-yellow-500';
-    }
-  };
 
   const days = getDaysInMonth(currentDate);
 
@@ -260,11 +244,15 @@ const Calendar = () => {
                     
                     {/* Phase Bar */}
                     {phase && (
-                      <div className={`
-                        ${phase.color} text-white text-xs p-1 rounded mb-1 flex items-center gap-1
-                        ${phase.startDate.toDateString() === day.date.toDateString() ? 'rounded-l' : ''}
-                        ${phase.endDate.toDateString() === day.date.toDateString() ? 'rounded-r' : ''}
-                      `}>
+                      <div 
+                        className={`
+                          ${phase.color} text-white text-xs p-1 rounded mb-1 flex items-center gap-1 cursor-pointer hover:opacity-80
+                          ${phase.startDate.toDateString() === day.date.toDateString() ? 'rounded-l' : ''}
+                          ${phase.endDate.toDateString() === day.date.toDateString() ? 'rounded-r' : ''}
+                        `}
+                        onClick={() => handlePhaseClick(phase)}
+                        title={`${phase.name} - ${phase.progress}% complete`}
+                      >
                         {getStatusIcon(phase.status)}
                         {phase.startDate.toDateString() === day.date.toDateString() && (
                           <span className="truncate">{phase.name}</span>
@@ -273,15 +261,29 @@ const Calendar = () => {
                     )}
                     
                     {/* Deliverables */}
-                    {dayDeliverables.map(deliverable => (
-                      <div
-                        key={deliverable.id}
-                        className={`
-                          w-2 h-2 rounded-full mb-1 ${getDeliverableColor(deliverable.status)}
-                        `}
-                        title={deliverable.name}
-                      />
-                    ))}
+                    <div className="flex flex-wrap gap-1">
+                      {dayDeliverables.map(deliverable => (
+                        <div
+                          key={deliverable.id}
+                          className={`
+                            relative flex items-center justify-center w-4 h-4 rounded-full border-2 cursor-pointer hover:scale-110 transition-transform
+                            ${getDeliverableStatusColor(deliverable.status)}
+                          `}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeliverableClick(deliverable);
+                          }}
+                          title={`${deliverable.name} - ${deliverable.status}`}
+                        >
+                          {deliverable.status === 'completed' && (
+                            <CheckCircle className="w-2.5 h-2.5 text-white" />
+                          )}
+                          {deliverable.priority === 'high' && (
+                            <Flag className={`absolute -top-1 -right-1 w-2 h-2 ${getPriorityColor(deliverable.priority)}`} />
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 );
               })}
@@ -299,7 +301,11 @@ const Calendar = () => {
             <CardContent>
               <div className="space-y-3">
                 {projectPhases.map(phase => (
-                  <div key={phase.id} className="flex items-center gap-3">
+                  <div 
+                    key={phase.id} 
+                    className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 p-2 rounded"
+                    onClick={() => handlePhaseClick(phase)}
+                  >
                     <div className={`w-4 h-4 rounded ${phase.color} flex items-center justify-center`}>
                       {getStatusIcon(phase.status)}
                     </div>
@@ -321,30 +327,168 @@ const Calendar = () => {
           {/* Deliverables Legend */}
           <Card>
             <CardHeader className="pb-3">
-              <h3 className="font-medium">Deliverable Status</h3>
+              <h3 className="font-medium">Deliverable Status & Priority</h3>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <span className="text-sm">Completed</span>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Status</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-green-600 flex items-center justify-center">
+                        <CheckCircle className="w-2.5 h-2.5 text-white" />
+                      </div>
+                      <span className="text-sm">Completed</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-blue-600" />
+                      <span className="text-sm">In Progress</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 rounded-full bg-gray-500 border-2 border-gray-600" />
+                      <span className="text-sm">Pending</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-red-600" />
+                      <span className="text-sm">Overdue</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                  <span className="text-sm">Due Soon / Pending</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <span className="text-sm">Overdue</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-blue-500" />
-                  <span className="text-sm">Future Deliverable</span>
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Priority</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <Flag className="w-3 h-3 text-red-500" />
+                      <span className="text-sm">High Priority</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Flag className="w-3 h-3 text-yellow-500" />
+                      <span className="text-sm">Medium Priority</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Flag className="w-3 h-3 text-green-500" />
+                      <span className="text-sm">Low Priority</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Phase Details Modal */}
+        <Dialog open={!!selectedPhase} onOpenChange={() => setSelectedPhase(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <div className={`w-4 h-4 rounded ${selectedPhase?.color} flex items-center justify-center`}>
+                  {selectedPhase && getStatusIcon(selectedPhase.status)}
+                </div>
+                {selectedPhase?.name}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedPhase && (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-sm mb-2">Description</h4>
+                  <p className="text-sm text-muted-foreground">{selectedPhase.description}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-sm mb-1">Start Date</h4>
+                    <p className="text-sm">{selectedPhase.startDate.toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm mb-1">End Date</h4>
+                    <p className="text-sm">{selectedPhase.endDate.toLocaleDateString()}</p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm mb-1">Progress</h4>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-muted rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${selectedPhase.color}`}
+                        style={{ width: `${selectedPhase.progress}%` }}
+                      />
+                    </div>
+                    <span className="text-sm">{selectedPhase.progress}%</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm mb-2">Phase Deliverables</h4>
+                  <div className="space-y-2">
+                    {deliverables
+                      .filter(d => d.phaseId === selectedPhase.id)
+                      .map(deliverable => (
+                        <div key={deliverable.id} className="flex items-center gap-2 p-2 border rounded">
+                          <div className={`w-3 h-3 rounded-full ${getDeliverableStatusColor(deliverable.status).split(' ')[0]}`} />
+                          <span className="text-sm flex-1">{deliverable.name}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {deliverable.dueDate.toLocaleDateString()}
+                          </Badge>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Deliverable Details Modal */}
+        <Dialog open={!!selectedDeliverable} onOpenChange={() => setSelectedDeliverable(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <div className={`w-4 h-4 rounded-full ${selectedDeliverable && getDeliverableStatusColor(selectedDeliverable.status).split(' ')[0]}`} />
+                {selectedDeliverable?.name}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedDeliverable && (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-sm mb-2">Description</h4>
+                  <p className="text-sm text-muted-foreground">{selectedDeliverable.description}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-sm mb-1">Due Date</h4>
+                    <p className="text-sm">{selectedDeliverable.dueDate.toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm mb-1">Status</h4>
+                    <Badge 
+                      variant={selectedDeliverable.status === 'completed' ? 'default' : 'secondary'}
+                      className="capitalize"
+                    >
+                      {selectedDeliverable.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-sm mb-1">Priority</h4>
+                    <div className="flex items-center gap-1">
+                      <Flag className={`w-3 h-3 ${getPriorityColor(selectedDeliverable.priority)}`} />
+                      <span className="text-sm capitalize">{selectedDeliverable.priority}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm mb-1">Project</h4>
+                    <p className="text-sm">{selectedDeliverable.projectName}</p>
+                  </div>
+                </div>
+                {selectedDeliverable.assignedTo && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1">Assigned To</h4>
+                    <p className="text-sm">{selectedDeliverable.assignedTo}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
     </div>
   );
 };
