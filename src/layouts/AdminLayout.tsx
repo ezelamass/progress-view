@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const adminNavItems = [
   {
@@ -63,6 +64,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+  const { profile, signOut } = useAuth();
 
   // Load collapsed state from localStorage on mount
   useEffect(() => {
@@ -77,6 +79,18 @@ export default function AdminLayout() {
     const newState = !sidebarCollapsed;
     setSidebarCollapsed(newState);
     localStorage.setItem('admin-sidebar-collapsed', JSON.stringify(newState));
+  };
+
+  const displayName = profile 
+    ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email
+    : 'Admin User';
+    
+  const initials = profile 
+    ? `${profile.first_name?.[0] || ''}${profile.last_name?.[0] || ''}`.toUpperCase() || profile.email[0]?.toUpperCase()
+    : 'AD';
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   const isActivePath = (path: string) => {
@@ -203,9 +217,9 @@ export default function AdminLayout() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src="/admin-avatar.png" alt="Admin" />
+                      <AvatarImage src={profile?.avatar_url} alt="Admin" />
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        AD
+                        {initials}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -213,8 +227,8 @@ export default function AdminLayout() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium text-sm">Admin User</p>
-                      <p className="text-xs text-muted-foreground">admin@agency.com</p>
+                      <p className="font-medium text-sm">{displayName}</p>
+                      <p className="text-xs text-muted-foreground">{profile?.email}</p>
                     </div>
                   </div>
                   <DropdownMenuSeparator />
@@ -227,7 +241,7 @@ export default function AdminLayout() {
                     Account Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive">
+                  <DropdownMenuItem className="text-destructive" onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign out
                   </DropdownMenuItem>
