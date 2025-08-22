@@ -2,9 +2,8 @@ import ROICard from "@/components/ROICard";
 import ProjectProgress from "@/components/ProjectProgress";
 import QuickActions from "@/components/QuickActions";
 import RecentActivity from "@/components/RecentActivity";
-import ProjectSelector from "@/components/ProjectSelector";
 import { useAuth } from "@/hooks/useAuth";
-import { useProject, useProjectOptional } from "@/contexts/ProjectContext";
+import { useProjectOptional } from "@/contexts/ProjectContext";
 
 const Index = () => {
   const { profile } = useAuth();
@@ -34,8 +33,6 @@ const Index = () => {
         </p>
       </div>
 
-      {/* Project Selector for clients with multiple projects */}
-      {profile?.role === 'client' && <ProjectSelector />}
 
       {/* Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
