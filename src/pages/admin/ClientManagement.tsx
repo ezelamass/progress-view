@@ -60,6 +60,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
+import { UserProjectAssignments } from "@/components/admin/UserProjectAssignments";
 
 interface Client {
   id: string;
@@ -530,6 +531,9 @@ export default function ClientManagement() {
           </CardContent>
         </Card>
       </div>
+
+      {/* User-Project Assignments Section */}
+      <UserProjectAssignments />
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
