@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +49,8 @@ import {
   Edit,
   Trash2,
   Filter,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -58,65 +59,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Client {
-  id: number;
+  id: string;
   name: string;
   company: string;
   email: string;
-  phone: string;
-  status: "Active" | "Inactive" | "Completed";
-  logoUrl?: string;
-  projects: number;
-  createdAt: string;
+  phone?: string;
+  status: string;
+  logo_url?: string;
+  projects?: number;
+  created_at: string;
 }
-
-const mockClients: Client[] = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    company: "TechStart Solutions",
-    email: "sarah@techstart.com",
-    phone: "+1 (555) 123-4567",
-    status: "Active",
-    logoUrl: "",
-    projects: 2,
-    createdAt: "2024-01-15",
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    company: "Digital Dynamics",
-    email: "michael@digitaldyn.com",
-    phone: "+1 (555) 987-6543",
-    status: "Active",
-    logoUrl: "",
-    projects: 1,
-    createdAt: "2023-12-08",
-  },
-  {
-    id: 3,
-    name: "Emily Rodriguez",
-    company: "Innovation Labs",
-    email: "emily@innovlabs.com",
-    phone: "+1 (555) 456-7890",
-    status: "Completed",
-    logoUrl: "",
-    projects: 3,
-    createdAt: "2023-10-22",
-  },
-  {
-    id: 4,
-    name: "David Kim",
-    company: "Future Systems",
-    email: "david@futuresys.com",
-    phone: "+1 (555) 321-0987",
-    status: "Inactive",
-    logoUrl: "",
-    projects: 1,
-    createdAt: "2023-11-30",
-  },
-];
 
 interface ClientFormData {
   name: string;
@@ -124,11 +79,12 @@ interface ClientFormData {
   email: string;
   phone: string;
   logoUrl: string;
-  status: "Active" | "Inactive";
+  status: "active" | "inactive";
 }
 
 export default function ClientManagement() {
-  const [clients, setClients] = useState<Client[]>(mockClients);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -140,11 +96,63 @@ export default function ClientManagement() {
     email: "",
     phone: "",
     logoUrl: "",
-    status: "Active",
+    status: "active",
   });
   const [errors, setErrors] = useState<Partial<ClientFormData>>({});
   
   const { toast } = useToast();
+
+  // Fetch clients from database
+  useEffect(() => {
+    fetchClients();
+    
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('clients-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'clients' },
+        () => {
+          fetchClients();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchClients = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('clients')
+        .select(`
+          *,
+          projects(count)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const clientsWithProjectCount = data?.map(client => ({
+        ...client,
+        projects: client.projects?.[0]?.count || 0
+      })) || [];
+
+      setClients(clientsWithProjectCount);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      toast({
+        title: "Error fetching clients",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter clients based on search and status
   const filteredClients = clients.filter((client) => {
@@ -175,43 +183,64 @@ export default function ClientManagement() {
   };
 
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
     
-    if (editingClient) {
-      // Update existing client
-      setClients(prev => prev.map(client => 
-        client.id === editingClient.id 
-          ? { 
-              ...client, 
-              ...formData,
-              status: formData.status as "Active" | "Inactive" | "Completed"
-            }
-          : client
-      ));
+    try {
+      if (editingClient) {
+        // Update existing client
+        const { error } = await supabase
+          .from('clients')
+          .update({
+            name: formData.name,
+            company: formData.company,
+            email: formData.email,
+            phone: formData.phone,
+            logo_url: formData.logoUrl,
+            status: formData.status,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingClient.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Client updated successfully",
+          description: `${formData.company} has been updated.`,
+        });
+        setIsEditDialogOpen(false);
+      } else {
+        // Add new client
+        const { error } = await supabase
+          .from('clients')
+          .insert({
+            name: formData.name,
+            company: formData.company,
+            email: formData.email,
+            phone: formData.phone,
+            logo_url: formData.logoUrl,
+            status: formData.status,
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Client added successfully",
+          description: `${formData.company} has been added to your client list.`,
+        });
+        setIsAddDialogOpen(false);
+      }
+      
+      resetForm();
+      fetchClients(); // Refresh the list
+    } catch (error) {
+      console.error('Error saving client:', error);
       toast({
-        title: "Client updated successfully",
-        description: `${formData.company} has been updated.`,
+        title: "Error saving client",
+        description: "Please try again later.",
+        variant: "destructive",
       });
-      setIsEditDialogOpen(false);
-    } else {
-      // Add new client
-      const newClient: Client = {
-        id: Date.now(),
-        ...formData,
-        status: formData.status as "Active" | "Inactive" | "Completed",
-        projects: 0,
-        createdAt: new Date().toISOString().split('T')[0],
-      };
-      setClients(prev => [...prev, newClient]);
-      toast({
-        title: "Client added successfully",
-        description: `${formData.company} has been added to your client list.`,
-      });
-      setIsAddDialogOpen(false);
     }
-    
-    resetForm();
   };
 
   // Reset form
@@ -222,7 +251,7 @@ export default function ClientManagement() {
       email: "",
       phone: "",
       logoUrl: "",
-      status: "Active",
+      status: "active",
     });
     setErrors({});
     setEditingClient(null);
@@ -235,20 +264,37 @@ export default function ClientManagement() {
       name: client.name,
       company: client.company,
       email: client.email,
-      phone: client.phone,
-      logoUrl: client.logoUrl || "",
-      status: client.status === "Completed" ? "Active" : client.status,
+      phone: client.phone || "",
+      logoUrl: client.logo_url || "",
+      status: client.status as "active" | "inactive",
     });
     setIsEditDialogOpen(true);
   };
 
   // Handle delete
-  const handleDelete = (clientId: number) => {
-    setClients(prev => prev.filter(client => client.id !== clientId));
-    toast({
-      title: "Client deleted",
-      description: "The client has been removed from your list.",
-    });
+  const handleDelete = async (clientId: string) => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', clientId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Client deleted",
+        description: "The client has been removed from your list.",
+      });
+      
+      fetchClients(); // Refresh the list
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      toast({
+        title: "Error deleting client",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -310,9 +356,8 @@ export default function ClientManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Status</SelectItem>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Inactive">Inactive</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
             {(searchTerm || statusFilter !== "All") && (
@@ -334,100 +379,107 @@ export default function ClientManagement() {
       {/* Clients Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Contact Person</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Projects</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={client.logoUrl} alt={client.company} />
-                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                            {client.company.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{client.company}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{client.name}</TableCell>
-                    <TableCell>{client.email}</TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={
-                          client.status === 'Active' ? 'default' :
-                          client.status === 'Completed' ? 'secondary' :
-                          'destructive'
-                        }
-                      >
-                        {client.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{client.projects}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-background">
-                          <DropdownMenuItem onClick={() => handleEdit(client)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem 
-                                className="text-destructive"
-                                onSelect={(e) => e.preventDefault()}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Client</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete {client.company}? 
-                                  This client has {client.projects} associated project{client.projects !== 1 ? 's' : ''}. 
-                                  This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  onClick={() => handleDelete(client.id)}
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span className="ml-2">Loading clients...</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Contact Person</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Projects</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          {filteredClients.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No clients found matching your search criteria.
+                </TableHeader>
+                <TableBody>
+                  {filteredClients.map((client) => (
+                    <TableRow key={client.id}>
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={client.logo_url} alt={client.company} />
+                            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                              {client.company.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{client.company}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{client.name}</TableCell>
+                      <TableCell>{client.email}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            client.status === 'active' ? 'default' :
+                            client.status === 'inactive' ? 'secondary' :
+                            'destructive'
+                          }
+                        >
+                          {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{client.projects || 0}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-background">
+                            <DropdownMenuItem onClick={() => handleEdit(client)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem 
+                                  className="text-destructive"
+                                  onSelect={(e) => e.preventDefault()}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Client</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete {client.company}? 
+                                    This client has {client.projects || 0} associated project{(client.projects || 0) !== 1 ? 's' : ''}. 
+                                    This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => handleDelete(client.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {filteredClients.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No clients found matching your search criteria.
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -442,7 +494,7 @@ export default function ClientManagement() {
               <span className="text-sm text-muted-foreground">Active Clients</span>
             </div>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {clients.filter(c => c.status === 'Active').length}
+              {clients.filter(c => c.status === 'active').length}
             </p>
           </CardContent>
         </Card>
@@ -470,10 +522,10 @@ export default function ClientManagement() {
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
               <div className="h-2 w-2 rounded-full bg-accent" />
-              <span className="text-sm text-muted-foreground">Completed</span>
+              <span className="text-sm text-muted-foreground">Inactive</span>
             </div>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {clients.filter(c => c.status === 'Completed').length}
+              {clients.filter(c => c.status === 'inactive').length}
             </p>
           </CardContent>
         </Card>
@@ -590,9 +642,9 @@ function ClientForm({ formData, setFormData, errors }: ClientFormProps) {
       <div className="flex items-center space-x-2">
         <Switch
           id="status"
-          checked={formData.status === "Active"}
+          checked={formData.status === "active"}
           onCheckedChange={(checked) => 
-            setFormData(prev => ({ ...prev, status: checked ? "Active" : "Inactive" }))
+            setFormData(prev => ({ ...prev, status: checked ? "active" : "inactive" }))
           }
         />
         <Label htmlFor="status">Active Status</Label>

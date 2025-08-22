@@ -6,17 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, UserPlus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Client {
-  id: number;
+  id: string;
   name: string;
   company: string;
   email: string;
-  phone: string;
-  status: "Active" | "Inactive" | "Completed";
-  logoUrl?: string;
-  projects: number;
-  createdAt: string;
+  phone?: string;
+  status: string;
+  logo_url?: string;
+  projects?: number;
+  created_at: string;
 }
 
 interface ClientFormData {
@@ -25,7 +26,7 @@ interface ClientFormData {
   email: string;
   phone: string;
   logoUrl: string;
-  status: "Active" | "Inactive";
+  status: "active" | "inactive";
 }
 
 interface AddClientButtonProps {
@@ -50,7 +51,7 @@ export default function AddClientButton({
     email: "",
     phone: "",
     logoUrl: "",
-    status: "Active",
+    status: "active",
   });
   const [errors, setErrors] = useState<Partial<ClientFormData>>({});
   const { toast } = useToast();
@@ -72,29 +73,48 @@ export default function AddClientButton({
   };
 
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
     
-    const newClient: Client = {
-      id: Date.now(),
-      ...formData,
-      status: formData.status as "Active" | "Inactive" | "Completed",
-      projects: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-    };
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .insert({
+          name: formData.name,
+          company: formData.company,
+          email: formData.email,
+          phone: formData.phone,
+          logo_url: formData.logoUrl,
+          status: formData.status,
+        })
+        .select()
+        .single();
 
-    // Call callback if provided
-    if (onClientAdded) {
-      onClientAdded(newClient);
+      if (error) throw error;
+
+      // Call callback if provided
+      if (onClientAdded && data) {
+        onClientAdded({
+          ...data,
+          projects: 0,
+        });
+      }
+
+      toast({
+        title: "Client added successfully",
+        description: `${formData.company} has been added to your client list.`,
+      });
+
+      resetForm();
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Error adding client:', error);
+      toast({
+        title: "Error adding client",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
     }
-
-    toast({
-      title: "Client added successfully",
-      description: `${formData.company} has been added to your client list.`,
-    });
-
-    resetForm();
-    setIsOpen(false);
   };
 
   // Reset form
@@ -105,7 +125,7 @@ export default function AddClientButton({
       email: "",
       phone: "",
       logoUrl: "",
-      status: "Active",
+      status: "active",
     });
     setErrors({});
   };
@@ -202,9 +222,9 @@ export default function AddClientButton({
           <div className="flex items-center space-x-2">
             <Switch
               id="status"
-              checked={formData.status === "Active"}
+              checked={formData.status === "active"}
               onCheckedChange={(checked) => 
-                setFormData(prev => ({ ...prev, status: checked ? "Active" : "Inactive" }))
+                setFormData(prev => ({ ...prev, status: checked ? "active" : "inactive" }))
               }
             />
             <Label htmlFor="status">Active Status</Label>

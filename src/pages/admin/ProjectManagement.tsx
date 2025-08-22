@@ -20,7 +20,8 @@ import {
   ArrowLeft,
   ArrowRight,
   TestTube,
-  Globe
+  Globe,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -66,6 +67,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock data for projects
 const mockProjects = [
@@ -181,12 +183,15 @@ const mockClients = [
 ];
 
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'In Progress': return 'default';
-    case 'Planning': return 'secondary';
-    case 'Completed': return 'default';
-    case 'On Hold': return 'destructive';
-    case 'Cancelled': return 'destructive';
+  const lowercaseStatus = status.toLowerCase();
+  switch (lowercaseStatus) {
+    case 'in progress':
+    case 'active': return 'default';
+    case 'planning': return 'secondary';
+    case 'completed': return 'default';
+    case 'on hold':
+    case 'paused': return 'destructive';
+    case 'cancelled': return 'destructive';
     default: return 'secondary';
   }
 };
@@ -206,8 +211,9 @@ const calculateROI = (employeeCount: number, hoursPerEmployee: number, costPerHo
 };
 
 export default function ProjectManagement() {
-  const [projects, setProjects] = useState(mockProjects);
-  const [clients] = useState(mockClients);
+  const [projects, setProjects] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
@@ -240,71 +246,214 @@ export default function ProjectManagement() {
     }
   });
 
+  // Fetch data from database
+  useEffect(() => {
+    fetchProjects();
+    fetchClients();
+    
+    // Set up real-time subscription for projects
+    const channel = supabase
+      .channel('projects-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projects' },
+        () => {
+          fetchProjects();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('projects')
+        .select(`
+          *,
+          clients!projects_client_id_fkey(
+            id,
+            company,
+            logo_url
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast({
+        title: "Error fetching projects",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, company')
+        .eq('status', 'active')
+        .order('company');
+
+      if (error) throw error;
+
+      setClients(data || []);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+    }
+  };
+
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.client.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = project.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.clients?.company?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || project.status === statusFilter;
-    const matchesClient = clientFilter === "all" || project.clientId.toString() === clientFilter;
+    const matchesClient = clientFilter === "all" || project.client_id === clientFilter;
     
     return matchesSearch && matchesStatus && matchesClient;
   });
 
-  const handleCreateProject = (values: any) => {
-    const newProject = {
-      ...values,
-      id: Date.now(),
-      client: clients.find(c => c.id.toString() === values.clientId)?.name || "",
-      clientAvatar: "/placeholder.jpg",
-      currentPhase: values.phases[0].name,
-      phases: values.phases.map((phase: any, index: number) => ({
-        ...phase,
-        status: index === 0 ? "in-progress" : "pending"
-      }))
-    };
-    
-    setProjects([...projects, newProject]);
-    setIsCreateDialogOpen(false);
-    setDialogStep(1);
-    form.reset();
-    toast({
-      title: "Project Created",
-      description: "New project has been created successfully.",
-    });
+  const handleCreateProject = async (values: any) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .insert({
+          name: values.name,
+          client_id: values.clientId,
+          description: values.description,
+          start_date: values.startDate,
+          end_date: values.endDate,
+          status: values.status.toLowerCase(),
+          progress_percentage: values.progress,
+          environment: values.environment,
+          drive_folder_url: values.driveFolderUrl,
+          roi_config: {
+            employees: values.roiConfig.employeeCount,
+            hourlyRate: values.roiConfig.costPerHour,
+            hoursSaved: values.roiConfig.hoursPerEmployee
+          }
+        });
+
+      if (error) throw error;
+
+      setIsCreateDialogOpen(false);
+      setDialogStep(1);
+      form.reset();
+      fetchProjects(); // Refresh the list
+      
+      toast({
+        title: "Project Created",
+        description: "New project has been created successfully.",
+      });
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast({
+        title: "Error creating project",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditProject = (project: any) => {
     setEditingProject(project);
-    form.reset(project);
+    form.reset({
+      name: project.name,
+      clientId: project.client_id,
+      description: project.description,
+      startDate: project.start_date,
+      endDate: project.end_date,
+      status: project.status.charAt(0).toUpperCase() + project.status.slice(1),
+      progress: project.progress_percentage,
+      environment: project.environment,
+      driveFolderUrl: project.drive_folder_url || "",
+      roiConfig: {
+        employeeCount: project.roi_config?.employees || 10,
+        hoursPerEmployee: project.roi_config?.hoursSaved || 2,
+        costPerHour: project.roi_config?.hourlyRate || 30
+      }
+    });
     setDialogStep(1);
   };
 
-  const handleUpdateProject = (values: any) => {
-    const updatedProjects = projects.map(p => 
-      p.id === editingProject.id 
-        ? { 
-            ...p, 
-            ...values,
-            client: clients.find(c => c.id.toString() === values.clientId)?.name || ""
-          }
-        : p
-    );
-    setProjects(updatedProjects);
-    setEditingProject(null);
-    setDialogStep(1);
-    form.reset();
-    toast({
-      title: "Project Updated",
-      description: "Project has been updated successfully.",
-    });
+  const handleUpdateProject = async (values: any) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          name: values.name,
+          client_id: values.clientId,
+          description: values.description,
+          start_date: values.startDate,
+          end_date: values.endDate,
+          status: values.status.toLowerCase(),
+          progress_percentage: values.progress,
+          environment: values.environment,
+          drive_folder_url: values.driveFolderUrl,
+          roi_config: {
+            employees: values.roiConfig.employeeCount,
+            hourlyRate: values.roiConfig.costPerHour,
+            hoursSaved: values.roiConfig.hoursPerEmployee
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingProject.id);
+
+      if (error) throw error;
+
+      setEditingProject(null);
+      setDialogStep(1);
+      form.reset();
+      fetchProjects(); // Refresh the list
+      
+      toast({
+        title: "Project Updated",
+        description: "Project has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating project:', error);
+      toast({
+        title: "Error updating project",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteProject = (project: any) => {
-    setProjects(projects.filter(p => p.id !== project.id));
-    setDeleteProject(null);
-    toast({
-      title: "Project Deleted",
-      description: "Project has been deleted successfully.",
-    });
+  const handleDeleteProject = async (project: any) => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', project.id);
+
+      if (error) throw error;
+
+      setDeleteProject(null);
+      fetchProjects(); // Refresh the list
+      
+      toast({
+        title: "Project Deleted",
+        description: "Project has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: "Error deleting project",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
   const resetDialog = () => {
@@ -353,8 +502,8 @@ export default function ProjectManagement() {
               <SelectContent>
                 <SelectItem value="all">All Clients</SelectItem>
                 {clients.map(client => (
-                  <SelectItem key={client.id} value={client.id.toString()}>
-                    {client.name}
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.company}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -379,83 +528,97 @@ export default function ProjectManagement() {
       {/* Projects Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Project</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Environment</TableHead>
-                <TableHead>Progress</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead>End Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProjects.map((project) => (
-                <TableRow key={project.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-foreground">{project.name}</p>
-                      <p className="text-sm text-muted-foreground">{project.currentPhase}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={project.clientAvatar} alt={project.client} />
-                        <AvatarFallback>
-                          {project.client.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{project.client}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusColor(project.status) as any}>
-                      {project.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      {project.environment === "production" ? (
-                        <Globe className="h-4 w-4 text-success" />
-                      ) : (
-                        <TestTube className="h-4 w-4 text-warning" />
-                      )}
-                      <span className="capitalize text-sm">
-                        {project.environment}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="w-24">
-                      <div className="flex items-center justify-between text-sm mb-1">
-                        <span>{project.progress}%</span>
-                      </div>
-                      <Progress value={project.progress} className="h-2" />
-                    </div>
-                  </TableCell>
-                  <TableCell>{new Date(project.startDate).toLocaleDateString()}</TableCell>
-                  <TableCell>{new Date(project.endDate).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button size="sm" variant="ghost" onClick={() => handleEditProject(project)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleEditProject(project)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setDeleteProject(project)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span className="ml-2">Loading projects...</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Environment</TableHead>
+                  <TableHead>Progress</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredProjects.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-foreground">{project.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={project.clients?.logo_url} alt={project.clients?.company} />
+                          <AvatarFallback>
+                            {project.clients?.company?.split(' ').map(n => n[0]).join('') || 'CL'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{project.clients?.company || 'Unknown Client'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusColor(project.status) as any}>
+                        {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {project.environment === "production" ? (
+                          <Globe className="h-4 w-4 text-success" />
+                        ) : (
+                          <TestTube className="h-4 w-4 text-warning" />
+                        )}
+                        <span className="capitalize text-sm">
+                          {project.environment}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="w-24">
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span>{project.progress_percentage || 0}%</span>
+                        </div>
+                        <Progress value={project.progress_percentage || 0} className="h-2" />
+                      </div>
+                    </TableCell>
+                    <TableCell>{project.start_date ? new Date(project.start_date).toLocaleDateString() : 'N/A'}</TableCell>
+                    <TableCell>{project.end_date ? new Date(project.end_date).toLocaleDateString() : 'N/A'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Button size="sm" variant="ghost" onClick={() => handleEditProject(project)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleEditProject(project)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setDeleteProject(project)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+          {!loading && filteredProjects.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              No projects found matching your search criteria.
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -477,7 +640,7 @@ export default function ProjectManagement() {
               <span className="text-sm text-muted-foreground">Completed</span>
             </div>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {projects.filter(p => p.status === 'Completed').length}
+              {projects.filter(p => p.status === 'completed').length}
             </p>
           </CardContent>
         </Card>
@@ -488,7 +651,7 @@ export default function ProjectManagement() {
               <span className="text-sm text-muted-foreground">In Progress</span>
             </div>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {projects.filter(p => p.status === 'In Progress').length}
+              {projects.filter(p => p.status === 'active' || p.status === 'in progress').length}
             </p>
           </CardContent>
         </Card>
@@ -499,7 +662,7 @@ export default function ProjectManagement() {
               <span className="text-sm text-muted-foreground">On Hold</span>
             </div>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {projects.filter(p => p.status === 'On Hold').length}
+              {projects.filter(p => p.status === 'on hold' || p.status === 'paused').length}
             </p>
           </CardContent>
         </Card>
@@ -551,8 +714,8 @@ export default function ProjectManagement() {
                           </FormControl>
                           <SelectContent>
                             {clients.map(client => (
-                              <SelectItem key={client.id} value={client.id.toString()}>
-                                {client.name}
+                              <SelectItem key={client.id} value={client.id}>
+                                {client.company}
                               </SelectItem>
                             ))}
                           </SelectContent>
