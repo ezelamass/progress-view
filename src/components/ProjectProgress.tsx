@@ -2,14 +2,65 @@ import { Calendar, Clock, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { ProjectWithClient } from "@/hooks/useProjects";
 
-const ProjectProgress = () => {
-  const currentProgress = 65;
+interface ProjectProgressProps {
+  project?: ProjectWithClient | null;
+}
+
+const ProjectProgress = ({ project }: ProjectProgressProps) => {
+  if (!project) {
+    return (
+      <Card className="bg-gradient-card border-border/50 shadow-card">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold text-foreground">Project Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="text-muted-foreground mb-2">📈</div>
+              <p className="text-sm text-muted-foreground">
+                Select a project to view progress
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const currentProgress = project.progress_percentage;
+  
+  // Calculate days remaining
+  const endDate = new Date(project.end_date);
+  const currentDate = new Date();
+  const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)));
+  
+  // Generate phases based on project timeline
+  const startDate = new Date(project.start_date);
+  const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  
   const phases = [
-    { name: "Setup", status: "completed", week: "Week 1" },
-    { name: "Implementation", status: "current", week: "Week 2-3" },
-    { name: "Testing", status: "upcoming", week: "Week 4" },
-    { name: "Deployment", status: "upcoming", week: "Week 5" },
+    { 
+      name: "Setup", 
+      status: currentProgress >= 25 ? "completed" : currentProgress > 0 ? "current" : "upcoming", 
+      week: "Week 1" 
+    },
+    { 
+      name: "Implementation", 
+      status: currentProgress >= 75 ? "completed" : currentProgress >= 25 ? "current" : "upcoming", 
+      week: "Week 2-3" 
+    },
+    { 
+      name: "Testing", 
+      status: currentProgress >= 90 ? "completed" : currentProgress >= 75 ? "current" : "upcoming", 
+      week: "Week 4" 
+    },
+    { 
+      name: "Deployment", 
+      status: currentProgress >= 100 ? "completed" : currentProgress >= 90 ? "current" : "upcoming", 
+      week: "Week 5" 
+    },
   ];
 
   const getStatusColor = (status: string) => {
@@ -30,13 +81,13 @@ const ProjectProgress = () => {
     <Card className="bg-gradient-card border-border/50 shadow-card">
       <CardHeader className="pb-4">
         <CardTitle className="text-lg font-semibold text-foreground">Project Progress</CardTitle>
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-2xl font-bold text-primary">{currentProgress}%</span>
-          <div className="text-right">
-            <div className="text-sm text-muted-foreground">Days remaining</div>
-            <div className="text-lg font-semibold text-foreground">12</div>
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-2xl font-bold text-primary">{currentProgress}%</span>
+            <div className="text-right">
+              <div className="text-sm text-muted-foreground">Days remaining</div>
+              <div className="text-lg font-semibold text-foreground">{daysRemaining}</div>
+            </div>
           </div>
-        </div>
       </CardHeader>
       
       <CardContent className="space-y-4">

@@ -2,11 +2,24 @@ import ROICard from "@/components/ROICard";
 import ProjectProgress from "@/components/ProjectProgress";
 import QuickActions from "@/components/QuickActions";
 import RecentActivity from "@/components/RecentActivity";
+import ProjectSelector from "@/components/ProjectSelector";
+import { useAuth } from "@/hooks/useAuth";
+import { useProject, useProjectOptional } from "@/contexts/ProjectContext";
 
 const Index = () => {
-  // Mock current project data - in real implementation this would come from API/context
-  const currentProject = {
-    driveFolderUrl: "https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz"
+  const { profile } = useAuth();
+  const projectContext = useProjectOptional();
+  const selectedProject = projectContext?.selectedProject;
+
+  // Get display name
+  const getDisplayName = () => {
+    if (profile?.first_name) {
+      return profile.first_name;
+    }
+    if (profile?.email) {
+      return profile.email.split('@')[0];
+    }
+    return 'there';
   };
 
   return (
@@ -14,31 +27,34 @@ const Index = () => {
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Welcome back, John
+          Welcome back, {getDisplayName()}
         </h1>
         <p className="text-muted-foreground">
           Here's an overview of your project progress and recent updates.
         </p>
       </div>
 
+      {/* Project Selector for clients with multiple projects */}
+      {profile?.role === 'client' && <ProjectSelector />}
+
       {/* Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Quick Actions - Top Position */}
-          <QuickActions project={currentProject} />
+          <QuickActions project={selectedProject} />
           
           {/* ROI Visualizer */}
-          <ROICard />
+          <ROICard project={selectedProject} />
           
           {/* Project Progress */}
-          <ProjectProgress />
+          <ProjectProgress project={selectedProject} />
         </div>
 
         {/* Right Column - Sidebar Content */}
         <div className="space-y-6">
           {/* Recent Activity */}
-          <RecentActivity />
+          <RecentActivity project={selectedProject} />
           
           {/* Statistics */}
           <div className="bg-card border border-border/50 rounded-lg p-6">

@@ -16,7 +16,7 @@ export interface DeliverableWithProject extends Deliverable {
   };
 }
 
-export const useDeliverables = () => {
+export const useDeliverables = (projectId?: string) => {
   const [deliverables, setDeliverables] = useState<DeliverableWithProject[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -160,7 +160,7 @@ export const useDeliverables = () => {
 
   useEffect(() => {
     fetchDeliverables();
-  }, []);
+  }, [projectId]);
 
   return {
     deliverables,

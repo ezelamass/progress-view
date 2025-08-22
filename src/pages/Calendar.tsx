@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Deliverable as BaseDeliverable, mockDeliverables } from "@/types/deliverables";
+import { useProject } from "@/contexts/ProjectContext";
+import { useDeliverables } from "@/hooks/useDeliverables";
+import { format } from "date-fns";
 
 interface ProjectPhase {
   id: string;
@@ -18,57 +20,69 @@ interface ProjectPhase {
   color: string;
 }
 
-interface CalendarDeliverable extends Omit<BaseDeliverable, 'dueDate'> {
-  dueDate: Date;
-  phaseId: string;
-}
-
 const Calendar = () => {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedPhase, setSelectedPhase] = useState<ProjectPhase | null>(null);
-  const [selectedDeliverable, setSelectedDeliverable] = useState<CalendarDeliverable | null>(null);
+  const [selectedDeliverable, setSelectedDeliverable] = useState<any>(null);
+  
+  const { selectedProject } = useProject();
+  const { deliverables, loading } = useDeliverables(selectedProject?.id || undefined);
+  
+  if (!selectedProject) {
+    return (
+      <div className="container mx-auto p-4 max-w-7xl">
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="text-muted-foreground mb-2">📅</div>
+              <p className="text-sm text-muted-foreground">
+                Select a project to view calendar
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  // Mock data for project phases
+  // Generate project phases based on timeline and progress
+  const startDate = new Date(selectedProject.start_date);
+  const endDate = new Date(selectedProject.end_date);
+  const progress = selectedProject.progress_percentage;
+  
   const projectPhases: ProjectPhase[] = [
     {
       id: "1",
       name: "Setup & Info Collection",
       description: "Initial setup, requirements gathering, and stakeholder interviews",
-      startDate: new Date(2024, 1, 5), // Feb 5, 2024
-      endDate: new Date(2024, 1, 9), // Feb 9, 2024
-      status: 'completed',
-      progress: 100,
+      startDate: startDate,
+      endDate: new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000)), // 1 week
+      status: progress >= 25 ? 'completed' : progress > 0 ? 'in_progress' : 'not_started',
+      progress: Math.min(progress * 4, 100), // First 25% of project
       color: 'bg-green-500'
     },
     {
       id: "2", 
       name: "Implementation & Development",
       description: "Core development work and feature implementation",
-      startDate: new Date(2024, 1, 12), // Feb 12, 2024
-      endDate: new Date(2024, 1, 23), // Feb 23, 2024
-      status: 'in_progress',
-      progress: 65,
+      startDate: new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000)), // Week 2
+      endDate: new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000)), // Until last week
+      status: progress >= 75 ? 'completed' : progress >= 25 ? 'in_progress' : 'not_started',
+      progress: Math.max(0, Math.min((progress - 25) * 2, 100)), // 25% to 75% of project
       color: 'bg-blue-500'
     },
     {
       id: "3",
       name: "Testing & Go-Live", 
       description: "Quality assurance, final testing, and production deployment",
-      startDate: new Date(2024, 1, 26), // Feb 26, 2024
-      endDate: new Date(2024, 2, 1), // Mar 1, 2024
-      status: 'not_started',
-      progress: 0,
+      startDate: new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000)), // Last week
+      endDate: endDate,
+      status: progress >= 100 ? 'completed' : progress >= 75 ? 'in_progress' : 'not_started',
+      progress: Math.max(0, (progress - 75) * 4), // Last 25% of project
       color: 'bg-purple-500'
     }
   ];
-
-  // Convert mock deliverables to calendar format
-  const deliverables: CalendarDeliverable[] = mockDeliverables.map(deliverable => ({
-    ...deliverable,
-    dueDate: new Date(deliverable.dueDate),
-    phaseId: deliverable.projectId // Map projectId to phaseId for now
-  }));
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -136,7 +150,7 @@ const Calendar = () => {
 
   const getDeliverablesForDate = (date: Date) => {
     return deliverables.filter(deliverable => 
-      deliverable.dueDate.toDateString() === date.toDateString()
+      new Date(deliverable.due_date).toDateString() === date.toDateString()
     );
   };
 
@@ -161,7 +175,7 @@ const Calendar = () => {
     setSelectedPhase(phase);
   };
 
-  const handleDeliverableClick = (deliverable: CalendarDeliverable) => {
+  const handleDeliverableClick = (deliverable: any) => {
     setSelectedDeliverable(deliverable);
   };
 
@@ -419,13 +433,12 @@ const Calendar = () => {
                   <h4 className="font-medium text-sm mb-2">Phase Deliverables</h4>
                   <div className="space-y-2">
                     {deliverables
-                      .filter(d => d.phaseId === selectedPhase.id)
                       .map(deliverable => (
                         <div key={deliverable.id} className="flex items-center gap-2 p-2 border rounded">
                           <div className={`w-3 h-3 rounded-full ${getDeliverableStatusColor(deliverable.status).split(' ')[0]}`} />
                           <span className="text-sm flex-1">{deliverable.name}</span>
                           <Badge variant="outline" className="text-xs">
-                            {deliverable.dueDate.toLocaleDateString()}
+                            {new Date(deliverable.due_date).toLocaleDateString()}
                           </Badge>
                         </div>
                       ))}
@@ -454,7 +467,7 @@ const Calendar = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <h4 className="font-medium text-sm mb-1">Due Date</h4>
-                    <p className="text-sm">{selectedDeliverable.dueDate.toLocaleDateString()}</p>
+                    <p className="text-sm">{new Date(selectedDeliverable.due_date).toLocaleDateString()}</p>
                   </div>
                   <div>
                     <h4 className="font-medium text-sm mb-1">Status</h4>

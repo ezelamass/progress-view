@@ -5,8 +5,10 @@ import { Badge } from "@/components/ui/badge";
 
 interface QuickActionsProps {
   project?: {
-    driveFolderUrl?: string;
-  };
+    id?: string;
+    drive_folder_url?: string;
+    status?: string;
+  } | null;
 }
 
 const QuickActions = ({ project }: QuickActionsProps) => {
@@ -30,8 +32,8 @@ const QuickActions = ({ project }: QuickActionsProps) => {
       label: "Manage Files",
       description: "Upload, organize and share project files",
       action: () => {
-        if (project?.driveFolderUrl) {
-          window.open(project.driveFolderUrl, "_blank");
+        if (project?.drive_folder_url) {
+          window.open(project.drive_folder_url, "_blank");
         } else {
           window.open("https://drive.google.com", "_blank");
         }
