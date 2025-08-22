@@ -1,24 +1,18 @@
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Search, 
   Plus, 
   Download,
   MoreHorizontal, 
-  DollarSign,
-  CreditCard,
   AlertCircle,
   CheckCircle,
   Clock,
-  Filter,
   Edit,
   Eye,
-  Send,
-  FileText,
   X,
   ArrowUpDown
 } from "lucide-react";
@@ -48,7 +42,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -63,140 +56,36 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
-import { toast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { usePayments } from "@/hooks/usePayments";
+import { useProjects } from "@/hooks/useProjects";
 
-// Mock data for payments
-const mockPayments = [
-  {
-    id: 1,
-    invoiceNumber: "INV-001",
-    client: "TechStart Solutions",
-    clientId: 1,
-    clientAvatar: "/client-1.jpg",
-    project: "E-commerce Platform Development",
-    projectId: 1,
-    amount: 24500,
-    status: "Paid",
-    paymentType: "Final",
-    method: "Credit Card",
-    dueDate: "2024-02-15",
-    paidDate: "2024-02-12",
-    description: "Final payment for platform development and deployment",
-    notes: "Payment received on time. Project completed successfully.",
-    createdAt: "2024-01-15",
-    updatedAt: "2024-02-12"
-  },
-  {
-    id: 2,
-    invoiceNumber: "INV-002",
-    client: "Digital Dynamics",
-    clientId: 2,
-    clientAvatar: "/client-2.jpg",
-    project: "Mobile App Development",
-    projectId: 2,
-    amount: 9375,
-    status: "Pending",
-    paymentType: "Monthly",
-    method: "Bank Transfer",
-    dueDate: "2024-03-01",
-    paidDate: null,
-    description: "50% milestone payment for mobile app project",
-    notes: "Awaiting payment confirmation from client.",
-    createdAt: "2024-02-01",
-    updatedAt: "2024-02-01"
-  },
-  {
-    id: 3,
-    invoiceNumber: "INV-003", 
-    client: "Innovation Labs",
-    clientId: 3,
-    clientAvatar: "/client-3.jpg",
-    project: "Website Redesign",
-    projectId: 3,
-    amount: 12200,
-    status: "Paid",
-    paymentType: "Initial",
-    method: "ACH Transfer",
-    dueDate: "2024-01-30",
-    paidDate: "2024-01-28",
-    description: "Complete payment for website redesign project",
-    notes: "Early payment received with bonus discount applied.",
-    createdAt: "2024-01-01",
-    updatedAt: "2024-01-28"
-  },
-  {
-    id: 4,
-    invoiceNumber: "INV-004",
-    client: "Future Systems",
-    clientId: 4,
-    clientAvatar: "/client-4.jpg",
-    project: "Custom CRM System",
-    projectId: 4,
-    amount: 16000,
-    status: "Overdue",
-    paymentType: "Initial",
-    method: "Credit Card",
-    dueDate: "2024-01-15",
-    paidDate: null,
-    description: "Initial payment for CRM development - 50% of total project value",
-    notes: "Payment overdue by 30+ days. Follow-up required.",
-    createdAt: "2023-12-15",
-    updatedAt: "2024-01-15"
-  },
-  {
-    id: 5,
-    invoiceNumber: "INV-005",
-    client: "Growth Partners",
-    clientId: 5,
-    clientAvatar: "/client-5.jpg",
-    project: "API Integration Platform",
-    projectId: 5,
-    amount: 15500,
-    status: "Cancelled",
-    paymentType: "Final",
-    method: "Wire Transfer",
-    dueDate: "2024-01-20",
-    paidDate: null,
-    description: "Final payment for API integration platform completion",
-    notes: "Cancelled due to project scope changes.",
-    createdAt: "2024-01-01",
-    updatedAt: "2024-01-25"
-  }
-];
-
-// Mock clients and projects data
-const mockClients = [
-  { id: 1, name: "TechStart Solutions" },
-  { id: 2, name: "Digital Dynamics" },
-  { id: 3, name: "Innovation Labs" },
-  { id: 4, name: "Future Systems" },
-  { id: 5, name: "Growth Partners" }
-];
-
-const mockProjects = [
-  { id: 1, name: "E-commerce Platform Development", clientId: 1 },
-  { id: 2, name: "Mobile App Development", clientId: 2 },
-  { id: 3, name: "Website Redesign", clientId: 3 },
-  { id: 4, name: "Custom CRM System", clientId: 4 },
-  { id: 5, name: "API Integration Platform", clientId: 5 }
-];
+const paymentFormSchema = z.object({
+  project_id: z.string().min(1, "Project is required"),
+  invoice_number: z.string().optional(),
+  amount: z.coerce.number().min(0.01, "Amount must be greater than 0"),
+  due_date: z.string().min(1, "Due date is required"),
+  status: z.enum(["pending", "paid", "overdue", "cancelled"]),
+  description: z.string().optional(),
+});
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Paid': return 'default';
-    case 'Pending': return 'secondary';
-    case 'Overdue': return 'destructive';
-    case 'Cancelled': return 'outline';
+    case 'paid': return 'default';
+    case 'pending': return 'secondary';
+    case 'overdue': return 'destructive';
+    case 'cancelled': return 'outline';
     default: return 'secondary';
   }
 };
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'Paid': return <CheckCircle className="h-4 w-4 text-success" />;
-    case 'Pending': return <Clock className="h-4 w-4 text-warning" />;
-    case 'Overdue': return <AlertCircle className="h-4 w-4 text-destructive" />;
-    case 'Cancelled': return <X className="h-4 w-4 text-muted-foreground" />;
+    case 'paid': return <CheckCircle className="h-4 w-4 text-success" />;
+    case 'pending': return <Clock className="h-4 w-4 text-warning" />;
+    case 'overdue': return <AlertCircle className="h-4 w-4 text-destructive" />;
+    case 'cancelled': return <X className="h-4 w-4 text-muted-foreground" />;
     default: return <Clock className="h-4 w-4 text-muted-foreground" />;
   }
 };
@@ -209,64 +98,61 @@ const formatCurrency = (amount: number) => {
 };
 
 const calculateFinancials = (payments: any[]) => {
-  const totalRevenue = payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
-  const pendingAmount = payments.filter(p => p.status === 'Pending').reduce((sum, p) => sum + p.amount, 0);
-  const overdueAmount = payments.filter(p => p.status === 'Overdue').reduce((sum, p) => sum + p.amount, 0);
-  const avgInvoiceValue = payments.length > 0 ? payments.reduce((sum, p) => sum + p.amount, 0) / payments.length : 0;
+  const totalRevenue = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0);
+  const pendingAmount = payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + Number(p.amount), 0);
+  const overdueAmount = payments.filter(p => p.status === 'overdue').reduce((sum, p) => sum + Number(p.amount), 0);
+  const avgInvoiceValue = payments.length > 0 ? payments.reduce((sum, p) => sum + Number(p.amount), 0) / payments.length : 0;
   
   return { totalRevenue, pendingAmount, overdueAmount, avgInvoiceValue };
 };
 
 export default function PaymentManagement() {
-  const [payments, setPayments] = useState(mockPayments);
-  const [clients] = useState(mockClients);
-  const [projects] = useState(mockProjects);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [clientFilter, setClientFilter] = useState("all");
-  const [sortField, setSortField] = useState("dueDate");
+  const [projectFilter, setProjectFilter] = useState("all");
+  const [sortField, setSortField] = useState("due_date");
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [deletePayment, setDeletePayment] = useState<any>(null);
 
-  const form = useForm({
+  const { payments, loading, createPayment, updatePayment, deletePayment: removePayment, updatePaymentStatus } = usePayments();
+  const { projects, loading: projectsLoading } = useProjects();
+
+  const form = useForm<z.infer<typeof paymentFormSchema>>({
+    resolver: zodResolver(paymentFormSchema),
     defaultValues: {
-      invoiceNumber: "",
-      clientId: "",
-      projectId: "",
+      project_id: "",
+      invoice_number: "",
       amount: 0,
-      paymentType: "Initial",
-      dueDate: "",
-      method: "Credit Card",
+      due_date: "",
+      status: "pending",
       description: "",
-      notes: "",
-      status: "Pending"
     }
   });
 
   const filteredAndSortedPayments = useMemo(() => {
     let filtered = payments.filter(payment => {
       const matchesSearch = 
-        payment.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.project.toLowerCase().includes(searchTerm.toLowerCase());
+        (payment.invoice_number && payment.invoice_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (payment.projects?.clients?.company && payment.projects.clients.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (payment.projects?.name && payment.projects.name.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesStatus = statusFilter === "all" || payment.status === statusFilter;
-      const matchesClient = clientFilter === "all" || payment.clientId.toString() === clientFilter;
+      const matchesProject = projectFilter === "all" || payment.project_id === projectFilter;
       
-      return matchesSearch && matchesStatus && matchesClient;
+      return matchesSearch && matchesStatus && matchesProject;
     });
 
     filtered.sort((a, b) => {
-      let aValue = a[sortField as keyof typeof a];
-      let bValue = b[sortField as keyof typeof b];
+      let aValue: any = a[sortField as keyof typeof a];
+      let bValue: any = b[sortField as keyof typeof b];
       
       if (sortField === 'amount') {
-        aValue = a.amount;
-        bValue = b.amount;
-      } else if (sortField === 'dueDate') {
-        aValue = new Date(a.dueDate).getTime();
-        bValue = new Date(b.dueDate).getTime();
+        aValue = Number(a.amount);
+        bValue = Number(b.amount);
+      } else if (sortField === 'due_date') {
+        aValue = new Date(a.due_date).getTime();
+        bValue = new Date(b.due_date).getTime();
       }
       
       if (sortOrder === 'asc') {
@@ -277,16 +163,9 @@ export default function PaymentManagement() {
     });
 
     return filtered;
-  }, [payments, searchTerm, statusFilter, clientFilter, sortField, sortOrder]);
+  }, [payments, searchTerm, statusFilter, projectFilter, sortField, sortOrder]);
 
   const financials = useMemo(() => calculateFinancials(payments), [payments]);
-
-  const availableProjects = useMemo(() => {
-    const selectedClientId = form.watch("clientId");
-    return selectedClientId 
-      ? projects.filter(p => p.clientId.toString() === selectedClientId)
-      : [];
-  }, [form.watch("clientId"), projects]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -297,89 +176,61 @@ export default function PaymentManagement() {
     }
   };
 
-  const handleCreatePayment = (values: any) => {
-    const client = clients.find(c => c.id.toString() === values.clientId);
-    const project = projects.find(p => p.id.toString() === values.projectId);
-    
-    const newPayment = {
-      ...values,
-      id: Date.now(),
-      client: client?.name || "",
-      project: project?.name || "",
-      clientAvatar: "/placeholder.jpg",
-      paidDate: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    setPayments([...payments, newPayment]);
-    setIsCreateDialogOpen(false);
-    form.reset();
-    toast({
-      title: "Payment Created",
-      description: "New payment record has been created successfully.",
-    });
+  const handleCreatePayment = async (values: z.infer<typeof paymentFormSchema>) => {
+    try {
+      const paymentData = {
+        project_id: values.project_id,
+        amount: values.amount,
+        due_date: values.due_date,
+        status: values.status,
+        invoice_number: values.invoice_number || null,
+        description: values.description || null,
+      };
+      await createPayment(paymentData);
+      setIsCreateDialogOpen(false);
+      form.reset();
+    } catch (error) {
+      console.error('Error creating payment:', error);
+    }
   };
 
   const handleEditPayment = (payment: any) => {
     setEditingPayment(payment);
     form.reset({
-      ...payment,
-      clientId: payment.clientId.toString(),
-      projectId: payment.projectId.toString()
+      project_id: payment.project_id,
+      invoice_number: payment.invoice_number || "",
+      amount: Number(payment.amount),
+      due_date: payment.due_date,
+      status: payment.status,
+      description: payment.description || "",
     });
   };
 
-  const handleUpdatePayment = (values: any) => {
-    const client = clients.find(c => c.id.toString() === values.clientId);
-    const project = projects.find(p => p.id.toString() === values.projectId);
-    
-    const updatedPayments = payments.map(p => 
-      p.id === editingPayment.id 
-        ? { 
-            ...p, 
-            ...values,
-            client: client?.name || "",
-            project: project?.name || "",
-            updatedAt: new Date().toISOString(),
-            paidDate: values.status === 'Paid' && !p.paidDate ? new Date().toISOString() : p.paidDate
-          }
-        : p
-    );
-    setPayments(updatedPayments);
-    setEditingPayment(null);
-    form.reset();
-    toast({
-      title: "Payment Updated",
-      description: "Payment record has been updated successfully.",
-    });
+  const handleUpdatePayment = async (values: z.infer<typeof paymentFormSchema>) => {
+    try {
+      await updatePayment(editingPayment.id, values);
+      setEditingPayment(null);
+      form.reset();
+    } catch (error) {
+      console.error('Error updating payment:', error);
+    }
   };
 
-  const handleDeletePayment = (payment: any) => {
-    setPayments(payments.filter(p => p.id !== payment.id));
-    setDeletePayment(null);
-    toast({
-      title: "Payment Deleted",
-      description: "Payment record has been deleted successfully.",
-    });
+  const handleDeletePayment = async (payment: any) => {
+    try {
+      await removePayment(payment.id);
+      setDeletePayment(null);
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+    }
   };
 
-  const handleStatusChange = (paymentId: number, newStatus: string) => {
-    const updatedPayments = payments.map(p => 
-      p.id === paymentId 
-        ? { 
-            ...p, 
-            status: newStatus,
-            paidDate: newStatus === 'Paid' ? new Date().toISOString() : p.paidDate,
-            updatedAt: new Date().toISOString()
-          }
-        : p
-    );
-    setPayments(updatedPayments);
-    toast({
-      title: "Status Updated",
-      description: `Payment status changed to ${newStatus}.`,
-    });
+  const handleStatusChange = async (paymentId: string, newStatus: string) => {
+    try {
+      await updatePaymentStatus(paymentId, newStatus);
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
   };
 
   const resetDialog = () => {
@@ -387,6 +238,14 @@ export default function PaymentManagement() {
     setEditingPayment(null);
     form.reset();
   };
+
+  if (loading || projectsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -448,7 +307,7 @@ export default function PaymentManagement() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <CreditCard className="h-5 w-5 text-primary" />
+              <CheckCircle className="h-5 w-5 text-primary" />
               <span className="text-sm text-muted-foreground">Avg Invoice Value</span>
             </div>
             <p className="text-2xl font-bold text-foreground mt-1">
@@ -471,15 +330,15 @@ export default function PaymentManagement() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Select value={clientFilter} onValueChange={setClientFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Filter by client" />
+            <Select value={projectFilter} onValueChange={setProjectFilter}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Filter by project" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Clients</SelectItem>
-                {clients.map(client => (
-                  <SelectItem key={client.id} value={client.id.toString()}>
-                    {client.name}
+                <SelectItem value="all">All Projects</SelectItem>
+                {projects.map(project => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.clients?.company} - {project.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -490,10 +349,10 @@ export default function PaymentManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Paid">Paid</SelectItem>
-                <SelectItem value="Overdue">Overdue</SelectItem>
-                <SelectItem value="Cancelled">Cancelled</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -519,7 +378,7 @@ export default function PaymentManagement() {
                 </TableHead>
                 <TableHead 
                   className="cursor-pointer hover:bg-muted/50" 
-                  onClick={() => handleSort('dueDate')}
+                  onClick={() => handleSort('due_date')}
                 >
                   <div className="flex items-center">
                     Due Date <ArrowUpDown className="ml-1 h-3 w-3" />
@@ -534,36 +393,27 @@ export default function PaymentManagement() {
                 <TableRow key={payment.id}>
                   <TableCell>
                     <div>
-                      <p className="font-medium text-foreground">{payment.invoiceNumber}</p>
-                      <p className="text-sm text-muted-foreground">{payment.paymentType}</p>
+                      <p className="font-medium text-foreground">{payment.invoice_number || 'No Invoice #'}</p>
+                      <p className="text-sm text-muted-foreground">Payment</p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={payment.clientAvatar} alt={payment.client} />
-                        <AvatarFallback>
-                          {payment.client.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{payment.client}</span>
-                    </div>
+                    <span>{payment.projects?.clients?.company || 'Unknown Client'}</span>
                   </TableCell>
                   <TableCell>
-                    <p className="font-medium">{payment.project}</p>
-                    <p className="text-sm text-muted-foreground">{payment.method}</p>
+                    <p className="font-medium">{payment.projects?.name || 'Unknown Project'}</p>
                   </TableCell>
                   <TableCell>
                     <span className="font-bold text-foreground">
-                      {formatCurrency(payment.amount)}
+                      {formatCurrency(Number(payment.amount))}
                     </span>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p>{new Date(payment.dueDate).toLocaleDateString()}</p>
-                      {payment.status === 'Overdue' && (
+                      <p>{new Date(payment.due_date).toLocaleDateString()}</p>
+                      {payment.status === 'overdue' && (
                         <p className="text-sm text-destructive">
-                          {Math.ceil((new Date().getTime() - new Date(payment.dueDate).getTime()) / (1000 * 60 * 60 * 24))} days overdue
+                          {Math.ceil((new Date().getTime() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24))} days overdue
                         </p>
                       )}
                     </div>
@@ -591,17 +441,9 @@ export default function PaymentManagement() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleStatusChange(payment.id, 'Paid')}>
+                          <DropdownMenuItem onClick={() => handleStatusChange(payment.id, 'paid')}>
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Mark as Paid
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Send className="mr-2 h-4 w-4" />
-                            Send Reminder
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Download PDF
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
@@ -609,7 +451,7 @@ export default function PaymentManagement() {
                             onClick={() => setDeletePayment(payment)}
                           >
                             <X className="mr-2 h-4 w-4" />
-                            Cancel Payment
+                            Delete Payment
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -624,7 +466,7 @@ export default function PaymentManagement() {
 
       {/* Create/Edit Payment Dialog */}
       <Dialog open={isCreateDialogOpen || !!editingPayment} onOpenChange={resetDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {editingPayment ? 'Edit Payment' : 'Add New Payment'}
@@ -637,10 +479,35 @@ export default function PaymentManagement() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(editingPayment ? handleUpdatePayment : handleCreatePayment)}>
               <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="project_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select project" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {projects.map(project => (
+                            <SelectItem key={project.id} value={project.id}>
+                              {project.clients?.company} - {project.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="invoiceNumber"
+                    name="invoice_number"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Invoice Number</FormLabel>
@@ -651,89 +518,6 @@ export default function PaymentManagement() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="paymentType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Payment Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Initial">Initial</SelectItem>
-                            <SelectItem value="Monthly">Monthly</SelectItem>
-                            <SelectItem value="Milestone">Milestone</SelectItem>
-                            <SelectItem value="Final">Final</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="clientId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Client</FormLabel>
-                        <Select 
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            form.setValue("projectId", "");
-                          }} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select client" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {clients.map(client => (
-                              <SelectItem key={client.id} value={client.id.toString()}>
-                                {client.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="projectId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Project</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select project" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {availableProjects.map(project => (
-                              <SelectItem key={project.id} value={project.id.toString()}>
-                                {project.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="amount"
@@ -752,9 +536,12 @@ export default function PaymentManagement() {
                       </FormItem>
                     )}
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="dueDate"
+                    name="due_date"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Due Date</FormLabel>
@@ -765,50 +552,23 @@ export default function PaymentManagement() {
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="method"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Payment Method</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Credit Card">Credit Card</SelectItem>
-                            <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                            <SelectItem value="ACH Transfer">ACH Transfer</SelectItem>
-                            <SelectItem value="Wire Transfer">Wire Transfer</SelectItem>
-                            <SelectItem value="Check">Check</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                   <FormField
                     control={form.control}
                     name="status"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Pending">Pending</SelectItem>
-                            <SelectItem value="Paid">Paid</SelectItem>
-                            <SelectItem value="Overdue">Overdue</SelectItem>
-                            <SelectItem value="Cancelled">Cancelled</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="overdue">Overdue</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -833,26 +593,6 @@ export default function PaymentManagement() {
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Internal Notes</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Internal notes about this payment"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Internal notes for tracking payment status and communications
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
               <DialogFooter className="mt-6">
@@ -872,18 +612,17 @@ export default function PaymentManagement() {
       <Dialog open={!!deletePayment} onOpenChange={() => setDeletePayment(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cancel Payment</DialogTitle>
+            <DialogTitle>Delete Payment</DialogTitle>
             <DialogDescription>
-              Are you sure you want to cancel payment "{deletePayment?.invoiceNumber}" for {formatCurrency(deletePayment?.amount || 0)}? 
-              This will mark the payment as cancelled and cannot be undone.
+              Are you sure you want to delete this payment record? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletePayment(null)}>
-              Keep Payment
+              Cancel
             </Button>
             <Button variant="destructive" onClick={() => handleDeletePayment(deletePayment)}>
-              Cancel Payment
+              Delete Payment
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -16,26 +16,19 @@ import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { mockDeliverables, Deliverable, DeliverableFormData } from "@/types/deliverables";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
+import { useDeliverables } from "@/hooks/useDeliverables";
+import { useProjects } from "@/hooks/useProjects";
 
 const deliverableFormSchema = z.object({
-  projectId: z.string().min(1, "Project is required"),
+  project_id: z.string().min(1, "Project is required"),
   name: z.string().min(1, "Name is required"),
-  description: z.string().min(1, "Description is required"),
-  dueDate: z.date({
+  description: z.string().optional(),
+  due_date: z.date({
     required_error: "Due date is required",
   }),
   priority: z.enum(["low", "medium", "high"]),
-  assignedTo: z.string().optional(),
 });
-
-const mockProjects = [
-  { id: 'proj-1', name: 'TechStart Solutions - CRM Implementation' },
-  { id: 'proj-2', name: 'Retail Plus - Inventory System' },
-  { id: 'proj-3', name: 'HealthCorp - Patient Management' },
-];
 
 const getStatusIcon = (status: string) => {
   switch (status) {
@@ -80,76 +73,88 @@ export default function DeliverableManagement() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingDeliverable, setEditingDeliverable] = useState<Deliverable | null>(null);
-  const { toast } = useToast();
+  const [editingDeliverable, setEditingDeliverable] = useState<any>(null);
+  
+  const { deliverables, loading, createDeliverable, updateDeliverable, deleteDeliverable, updateDeliverableStatus } = useDeliverables();
+  const { projects, loading: projectsLoading } = useProjects();
 
   const form = useForm<z.infer<typeof deliverableFormSchema>>({
     resolver: zodResolver(deliverableFormSchema),
     defaultValues: {
-      projectId: "",
+      project_id: "",
       name: "",
       description: "",
       priority: "medium",
-      assignedTo: "",
     },
   });
 
-  const filteredDeliverables = mockDeliverables.filter(deliverable => {
+  const filteredDeliverables = deliverables.filter(deliverable => {
     const matchesSearch = deliverable.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         deliverable.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         (deliverable.description && deliverable.description.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || deliverable.status === statusFilter;
-    const matchesProject = projectFilter === 'all' || deliverable.projectId === projectFilter;
+    const matchesProject = projectFilter === 'all' || deliverable.project_id === projectFilter;
     
     return matchesSearch && matchesStatus && matchesProject;
   });
 
   const statusCounts = {
-    total: mockDeliverables.length,
-    completed: mockDeliverables.filter(d => d.status === 'completed').length,
-    pending: mockDeliverables.filter(d => d.status === 'pending').length,
-    overdue: mockDeliverables.filter(d => d.status === 'overdue').length,
-    in_progress: mockDeliverables.filter(d => d.status === 'in_progress').length,
+    total: deliverables.length,
+    completed: deliverables.filter(d => d.status === 'completed').length,
+    pending: deliverables.filter(d => d.status === 'pending').length,
+    overdue: deliverables.filter(d => d.status === 'overdue').length,
+    in_progress: deliverables.filter(d => d.status === 'in_progress').length,
   };
 
-  const onSubmit = (values: z.infer<typeof deliverableFormSchema>) => {
-    console.log("Creating/updating deliverable:", values);
-    toast({
-      title: editingDeliverable ? "Deliverable Updated" : "Deliverable Created",
-      description: `${values.name} has been ${editingDeliverable ? 'updated' : 'created'} successfully.`,
-    });
-    setIsDialogOpen(false);
-    setEditingDeliverable(null);
-    form.reset();
+  const onSubmit = async (values: z.infer<typeof deliverableFormSchema>) => {
+    try {
+      const deliverableData = {
+        project_id: values.project_id,
+        name: values.name,
+        description: values.description || null,
+        due_date: values.due_date.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
+        priority: values.priority,
+      };
+
+      if (editingDeliverable) {
+        await updateDeliverable(editingDeliverable.id, deliverableData);
+      } else {
+        await createDeliverable(deliverableData);
+      }
+
+      setIsDialogOpen(false);
+      setEditingDeliverable(null);
+      form.reset();
+    } catch (error) {
+      console.error('Error submitting deliverable:', error);
+    }
   };
 
-  const handleEdit = (deliverable: Deliverable) => {
+  const handleEdit = (deliverable: any) => {
     setEditingDeliverable(deliverable);
     form.reset({
-      projectId: deliverable.projectId,
+      project_id: deliverable.project_id,
       name: deliverable.name,
-      description: deliverable.description,
-      dueDate: new Date(deliverable.dueDate),
+      description: deliverable.description || "",
+      due_date: new Date(deliverable.due_date),
       priority: deliverable.priority,
-      assignedTo: deliverable.assignedTo || "",
     });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (deliverable: Deliverable) => {
-    console.log("Deleting deliverable:", deliverable.id);
-    toast({
-      title: "Deliverable Deleted",
-      description: `${deliverable.name} has been deleted successfully.`,
-      variant: "destructive",
-    });
+  const handleDelete = async (deliverable: any) => {
+    try {
+      await deleteDeliverable(deliverable.id);
+    } catch (error) {
+      console.error('Error deleting deliverable:', error);
+    }
   };
 
-  const handleStatusChange = (deliverable: Deliverable, newStatus: string) => {
-    console.log("Updating status:", deliverable.id, newStatus);
-    toast({
-      title: "Status Updated",
-      description: `${deliverable.name} status changed to ${newStatus.replace('_', ' ')}.`,
-    });
+  const handleStatusChange = async (deliverable: any, newStatus: string) => {
+    try {
+      await updateDeliverableStatus(deliverable.id, newStatus);
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
   };
 
   return (
@@ -187,7 +192,7 @@ export default function DeliverableManagement() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="projectId"
+                  name="project_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Project</FormLabel>
@@ -198,9 +203,9 @@ export default function DeliverableManagement() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {mockProjects.map((project) => (
+                          {projects.map((project) => (
                             <SelectItem key={project.id} value={project.id}>
-                              {project.name}
+                              {project.clients?.company} - {project.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -241,7 +246,7 @@ export default function DeliverableManagement() {
                 />
                 <FormField
                   control={form.control}
-                  name="dueDate"
+                  name="due_date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Due Date</FormLabel>
@@ -302,20 +307,7 @@ export default function DeliverableManagement() {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-                <FormField
-                  control={form.control}
-                  name="assignedTo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Assigned To</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter assignee name (optional)" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                 />
                 <DialogFooter>
                   <Button type="submit">
                     {editingDeliverable ? 'Update Deliverable' : 'Create Deliverable'}
@@ -405,9 +397,9 @@ export default function DeliverableManagement() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Projects</SelectItem>
-            {mockProjects.map((project) => (
+            {projects.map((project) => (
               <SelectItem key={project.id} value={project.id}>
-                {project.name}
+                {project.clients?.company} - {project.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -436,7 +428,6 @@ export default function DeliverableManagement() {
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Priority</TableHead>
-              <TableHead>Assigned To</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -450,10 +441,10 @@ export default function DeliverableManagement() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm">{deliverable.projectName}</span>
+                  <span className="text-sm">{deliverable.projects?.name || 'Unknown Project'}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm">{new Date(deliverable.dueDate).toLocaleDateString()}</span>
+                  <span className="text-sm">{new Date(deliverable.due_date).toLocaleDateString()}</span>
                 </TableCell>
                 <TableCell>
                   <Select 
@@ -481,7 +472,7 @@ export default function DeliverableManagement() {
                     <span className="capitalize">{deliverable.priority}</span>
                   </div>
                 </TableCell>
-                <TableCell>{deliverable.assignedTo}</TableCell>
+                
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-2">
                     <Button
