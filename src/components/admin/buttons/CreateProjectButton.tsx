@@ -114,6 +114,11 @@ export default function CreateProjectButton({
   };
 
   const handleCreateProject = async (values: any) => {
+    // Only allow form submission if we're on step 2
+    if (dialogStep !== 2) {
+      return;
+    }
+    
     setLoading(true);
     try {
       const { data, error } = await supabase
