@@ -30,16 +30,11 @@ interface Project {
   description: string;
   drive_folder_url?: string;
   environment: string;
-  calendly_link?: string;
   roi_config: {
     employees: number;
     hourlyRate: number;
     hoursSaved: number;
   };
-  phases?: Array<{
-    name: string;
-    duration: number;
-  }>;
 }
 
 interface ProjectFormDialogProps {
@@ -95,28 +90,44 @@ export default function ProjectFormDialog({
 
   const form = useForm({
     defaultValues: {
-      name: project?.name || "",
-      clientId: project?.client_id || "",
-      description: project?.description || "",
-      startDate: project?.start_date || "",
-      endDate: project?.end_date || "",
-      driveFolderUrl: project?.drive_folder_url || "",
-      environment: project?.environment || "production",
-      calendlyLink: project?.calendly_link || "",
-      status: project?.status || "active",
-      progress: project?.progress_percentage || 0,
-      phases: project?.phases || [
-        { name: "Week 1: Setup", duration: 7 },
-        { name: "Week 2-3: Implementation", duration: 14 },
-        { name: "Week 4: Testing", duration: 7 }
-      ],
+      name: "",
+      clientId: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      driveFolderUrl: "",
+      environment: "production",
+      status: "active",
+      progress: 0,
       roiConfig: {
-        employeeCount: project?.roi_config?.employees || 10,
-        hoursPerEmployee: project?.roi_config?.hoursSaved || 2,
-        costPerHour: project?.roi_config?.hourlyRate || 50
+        employeeCount: 10,
+        hoursPerEmployee: 2,
+        costPerHour: 50
       }
     }
   });
+
+  // Pre-populate form when editing
+  useEffect(() => {
+    if (project && isOpen) {
+      form.reset({
+        name: project.name || "",
+        clientId: project.client_id || "",
+        description: project.description || "",
+        startDate: project.start_date || "",
+        endDate: project.end_date || "",
+        driveFolderUrl: project.drive_folder_url || "",
+        environment: project.environment || "production",
+        status: project.status || "active",
+        progress: project.progress_percentage || 0,
+        roiConfig: {
+          employeeCount: project.roi_config?.employees || 10,
+          hoursPerEmployee: project.roi_config?.hoursSaved || 2,
+          costPerHour: project.roi_config?.hourlyRate || 50
+        }
+      });
+    }
+  }, [project, isOpen, form]);
 
   const calculateROI = (employees: number, hoursSaved: number, hourlyRate: number) => {
     const dailyROI = employees * hoursSaved * hourlyRate;
@@ -133,8 +144,8 @@ export default function ProjectFormDialog({
   };
 
   const handleFormSubmit = async (values: any) => {
-    // Only allow form submission if we're on step 3
-    if (dialogStep !== 3) {
+    // Only allow form submission if we're on step 2 
+    if (dialogStep !== 2) {
       return;
     }
     
@@ -185,8 +196,7 @@ export default function ProjectFormDialog({
         end_date: values.endDate,
         drive_folder_url: values.driveFolderUrl?.trim() || null,
         environment: values.environment,
-        calendly_link: values.calendlyLink?.trim() || null,
-        status: values.status,
+        status: values.status.toLowerCase(), // Fix: ensure lowercase for enum
         progress_percentage: values.progress,
         roi_config: {
           employees: values.roiConfig.employeeCount,
@@ -196,12 +206,30 @@ export default function ProjectFormDialog({
       };
 
       if (isEditing) {
+        // Only send modified fields for updates
+        const dirtyFields = form.formState.dirtyFields;
+        const updateData: any = {};
+        
+        if (dirtyFields.name) updateData.name = projectData.name;
+        if (dirtyFields.clientId) updateData.client_id = projectData.client_id;
+        if (dirtyFields.description) updateData.description = projectData.description;
+        if (dirtyFields.startDate) updateData.start_date = projectData.start_date;
+        if (dirtyFields.endDate) updateData.end_date = projectData.end_date;
+        if (dirtyFields.driveFolderUrl) updateData.drive_folder_url = projectData.drive_folder_url;
+        if (dirtyFields.environment) updateData.environment = projectData.environment;
+        if (dirtyFields.status) updateData.status = projectData.status;
+        if (dirtyFields.progress) updateData.progress_percentage = projectData.progress_percentage;
+        if (dirtyFields.roiConfig) updateData.roi_config = projectData.roi_config;
+
         const { error } = await supabase
           .from('projects')
-          .update(projectData)
+          .update(updateData)
           .eq('id', project.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
 
         toast({
           title: "Project Updated",
@@ -212,7 +240,10 @@ export default function ProjectFormDialog({
           .from('projects')
           .insert([projectData]);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
 
         toast({
           title: "Project Created",
@@ -249,7 +280,7 @@ export default function ProjectFormDialog({
   const roi = calculateROI(roiValues.employeeCount, roiValues.hoursPerEmployee, roiValues.costPerHour);
 
   const handleStepNavigation = (direction: 'next' | 'prev') => {
-    if (direction === 'next' && dialogStep < 3) {
+    if (direction === 'next' && dialogStep < 2) {
       setDialogStep(dialogStep + 1);
     } else if (direction === 'prev' && dialogStep > 1) {
       setDialogStep(dialogStep - 1);
@@ -262,9 +293,8 @@ export default function ProjectFormDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Step {dialogStep} of 3: {
-              dialogStep === 1 ? 'Basic Information' :
-              dialogStep === 2 ? 'Project Phases' : 'ROI Configuration'
+            Step {dialogStep} of 2: {
+              dialogStep === 1 ? 'Basic Information' : 'ROI Configuration'
             }
           </DialogDescription>
         </DialogHeader>
@@ -272,7 +302,7 @@ export default function ProjectFormDialog({
         <Form {...form}>
           <form onSubmit={(e) => {
             e.preventDefault();
-            if (dialogStep === 3) {
+            if (dialogStep === 2) {
               form.handleSubmit(handleFormSubmit)(e);
             }
           }}>
@@ -381,26 +411,6 @@ export default function ProjectFormDialog({
                 />
                 <FormField
                   control={form.control}
-                  name="calendlyLink"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Calendly Link</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="url"
-                          placeholder="https://calendly.com/..."
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Calendly scheduling link for client meetings (optional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name="environment"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
@@ -439,11 +449,10 @@ export default function ProjectFormDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Planning">Planning</SelectItem>
-                          <SelectItem value="In Progress">In Progress</SelectItem>
-                          <SelectItem value="On Hold">On Hold</SelectItem>
-                          <SelectItem value="Completed">Completed</SelectItem>
-                          <SelectItem value="Cancelled">Cancelled</SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="paused">Paused</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -480,48 +489,6 @@ export default function ProjectFormDialog({
             )}
 
             {dialogStep === 2 && (
-              <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  Configure project phases and their durations. Default phases based on Client Hub standard workflow.
-                </div>
-                {form.watch("phases").map((phase: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <FormField
-                      control={form.control}
-                      name={`phases.${index}.name`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phase {index + 1} Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`phases.${index}.duration`}
-                      render={({ field }) => (
-                        <FormItem className="mt-2">
-                          <FormLabel>Duration (days)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {dialogStep === 3 && (
               <div className="space-y-6">
                 <div className="text-sm text-muted-foreground">
                   Configure ROI calculation parameters to estimate monthly savings for the client.
@@ -636,7 +603,7 @@ export default function ProjectFormDialog({
                   Previous
                 </Button>
                 
-                {dialogStep < 3 ? (
+                {dialogStep < 2 ? (
                   <Button
                     type="button"
                     onClick={() => handleStepNavigation('next')}
