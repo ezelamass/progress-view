@@ -138,17 +138,54 @@ export default function ProjectFormDialog({
       return;
     }
     
+    // Validate required fields
+    if (!values.name?.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Project name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!values.clientId) {
+      toast({
+        title: "Validation Error", 
+        description: "Client selection is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!values.startDate) {
+      toast({
+        title: "Validation Error",
+        description: "Start date is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!values.endDate) {
+      toast({
+        title: "Validation Error",
+        description: "End date is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
     try {
       const projectData = {
-        name: values.name,
+        name: values.name.trim(),
         client_id: values.clientId,
-        description: values.description,
+        description: values.description?.trim() || '',
         start_date: values.startDate,
         end_date: values.endDate,
-        drive_folder_url: values.driveFolderUrl || null,
+        drive_folder_url: values.driveFolderUrl?.trim() || null,
         environment: values.environment,
-        calendly_link: values.calendlyLink || null,
+        calendly_link: values.calendlyLink?.trim() || null,
         status: values.status,
         progress_percentage: values.progress,
         roi_config: {
