@@ -223,6 +223,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          calendly_link: string | null
           client_id: string
           created_at: string
           description: string | null
@@ -238,6 +239,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          calendly_link?: string | null
           client_id: string
           created_at?: string
           description?: string | null
@@ -253,6 +255,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          calendly_link?: string | null
           client_id?: string
           created_at?: string
           description?: string | null

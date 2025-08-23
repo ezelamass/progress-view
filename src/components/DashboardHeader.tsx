@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, User, Settings, LogOut, CreditCard, Home, Calendar, HelpCircle, Building2, Moon, Sun, Monitor } from "lucide-react";
+import { Bell, ChevronDown, User, Settings, LogOut, CreditCard, Home, Calendar, HelpCircle, Building2 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -7,16 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectOptional } from "@/contexts/ProjectContext";
-import { useTheme } from "@/hooks/useTheme";
-import NotificationCenter from "@/components/NotificationCenter";
-import GlobalSearch from "@/components/GlobalSearch";
 const DashboardHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, signOut } = useAuth();
   const projectContext = useProjectOptional();
   const { selectedProject, projects, setSelectedProject } = projectContext || { selectedProject: null, projects: [], setSelectedProject: () => {} };
-  const { theme, setTheme } = useTheme();
   
   const displayName = profile 
     ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email
@@ -99,11 +95,7 @@ const DashboardHeader = () => {
 
           {/* User Profile and Actions */}
           <div className="flex items-center space-x-3">
-            {/* Global Search */}
-            <GlobalSearch className="hidden md:flex" />
             
-            {/* Notification Center */}
-            <NotificationCenter />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -178,25 +170,6 @@ const DashboardHeader = () => {
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
                   Account Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center">
-                      {theme === 'light' ? <Sun className="mr-2 h-4 w-4" /> : 
-                       theme === 'dark' ? <Moon className="mr-2 h-4 w-4" /> : 
-                       <Monitor className="mr-2 h-4 w-4" />}
-                      Theme
-                    </div>
-                    <select 
-                      value={theme} 
-                      onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'system')}
-                      className="text-xs bg-transparent border-none outline-none"
-                    >
-                      <option value="light">Light</option>
-                      <option value="dark">Dark</option>
-                      <option value="system">System</option>
-                    </select>
-                  </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
