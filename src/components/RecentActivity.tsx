@@ -1,16 +1,74 @@
+import { useEffect } from "react";
 import { CheckCircle, CreditCard, FileText, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useActivities } from "@/hooks/useActivities";
 import { ProjectWithClient } from "@/hooks/useProjects";
 import { formatDistanceToNow } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RecentActivityProps {
   project?: ProjectWithClient | null;
 }
 
 const RecentActivity = ({ project }: RecentActivityProps) => {
-  const { activities, loading } = useActivities(project?.id, 5);
+  const { activities, loading, refetch } = useActivities(project?.id, 5);
+
+  // Set up real-time listeners for project-specific updates
+  useEffect(() => {
+    if (!project?.id) return;
+
+    const channels = [
+      // Listen for project updates
+      supabase
+        .channel('project-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'projects',
+            filter: `id=eq.${project.id}`
+          },
+          () => refetch()
+        )
+        .subscribe(),
+
+      // Listen for payment updates
+      supabase
+        .channel('payment-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'payments',
+            filter: `project_id=eq.${project.id}`
+          },
+          () => refetch()
+        )
+        .subscribe(),
+
+      // Listen for deliverable updates
+      supabase
+        .channel('deliverable-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'deliverables',
+            filter: `project_id=eq.${project.id}`
+          },
+          () => refetch()
+        )
+        .subscribe(),
+    ];
+
+    return () => {
+      channels.forEach(channel => supabase.removeChannel(channel));
+    };
+  }, [project?.id, refetch]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {

@@ -2,6 +2,7 @@ import ROICard from "@/components/ROICard";
 import ProjectProgress from "@/components/ProjectProgress";
 import QuickActions from "@/components/QuickActions";
 import RecentActivity from "@/components/RecentActivity";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectOptional } from "@/contexts/ProjectContext";
 
@@ -54,11 +55,17 @@ const Index = () => {
           <RecentActivity project={selectedProject} />
           
           {/* Statistics */}
-          <div className="bg-card border border-border/50 rounded-lg p-6">
+          <div className="bg-card border border-border/50 rounded-lg p-6 relative">
             <div className="mb-4">
               <h3 className="text-sm font-medium text-muted-foreground">Statistics</h3>
               <p className="text-xs text-muted-foreground">Key performance metrics</p>
             </div>
+            <Badge 
+              variant="secondary" 
+              className="absolute -top-1 -right-1 text-xs px-2 py-0 bg-muted text-muted-foreground"
+            >
+              Coming Soon
+            </Badge>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

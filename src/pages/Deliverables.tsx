@@ -1,262 +1,197 @@
-import { useState } from "react";
-import { Calendar, CheckCircle, Clock, AlertTriangle, Flag, LayoutGrid, List } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { mockDeliverables, Deliverable } from "@/types/deliverables";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { useDeliverables } from "@/hooks/useDeliverables";
+import { useProjectOptional } from "@/contexts/ProjectContext";
+import { formatDistanceToNow, format } from "date-fns";
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case 'completed':
-      return <CheckCircle className="h-4 w-4 text-green-600" />;
-    case 'in_progress':
-      return <Clock className="h-4 w-4 text-blue-600" />;
-    case 'overdue':
-      return <AlertTriangle className="h-4 w-4 text-red-600" />;
-    default:
-      return <Clock className="h-4 w-4 text-gray-500" />;
-  }
-};
+const Deliverables = () => {
+  const projectContext = useProjectOptional();
+  const selectedProject = projectContext?.selectedProject;
+  const { deliverables, loading } = useDeliverables(selectedProject?.id);
 
-const getStatusBadge = (status: string) => {
-  const variants = {
-    completed: 'default',
-    in_progress: 'secondary',
-    pending: 'outline',
-    overdue: 'destructive',
-  } as const;
-  
-  return (
-    <Badge variant={variants[status as keyof typeof variants] || 'outline'}>
-      {status.replace('_', ' ')}
-    </Badge>
+  // Filter deliverables for the current project
+  const projectDeliverables = deliverables.filter(
+    deliverable => deliverable.project_id === selectedProject?.id
   );
-};
 
-const getPriorityFlag = (priority: string) => {
-  const colors = {
-    high: 'text-red-500',
-    medium: 'text-yellow-500',
-    low: 'text-green-500',
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return CheckCircle;
+      case 'in_progress': return Clock;
+      case 'pending': return AlertCircle;
+      default: return Clock;
+    }
   };
-  
-  return <Flag className={cn("h-4 w-4", colors[priority as keyof typeof colors])} />;
-};
 
-const getDaysUntilDue = (dueDate: string) => {
-  const today = new Date();
-  const due = new Date(dueDate);
-  const diffTime = due.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays < 0) {
-    return { text: `${Math.abs(diffDays)} days overdue`, color: 'text-red-600' };
-  } else if (diffDays <= 3) {
-    return { text: `Due in ${diffDays} days`, color: 'text-orange-600' };
-  } else {
-    return { text: new Date(dueDate).toLocaleDateString(), color: 'text-foreground' };
-  }
-};
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return "bg-success/20 text-success border-success/30";
+      case 'in_progress': return "bg-warning/20 text-warning border-warning/30";
+      case 'pending': return "bg-muted/20 text-muted-foreground border-muted/30";
+      default: return "bg-muted/20 text-muted-foreground border-muted/30";
+    }
+  };
 
-export default function Deliverables() {
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  
-  // Filter deliverables for current client (in real app, this would be based on user's projects)
-  const clientDeliverables = mockDeliverables.filter(d => d.projectId === 'proj-1');
-  
-  const filteredDeliverables = clientDeliverables.filter(deliverable => {
-    if (statusFilter === 'all') return true;
-    return deliverable.status === statusFilter;
-  });
-
-  const statusCounts = {
-    total: clientDeliverables.length,
-    completed: clientDeliverables.filter(d => d.status === 'completed').length,
-    pending: clientDeliverables.filter(d => d.status === 'pending').length,
-    overdue: clientDeliverables.filter(d => d.status === 'overdue').length,
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return "bg-destructive/20 text-destructive border-destructive/30";
+      case 'medium': return "bg-warning/20 text-warning border-warning/30";
+      case 'low': return "bg-muted/20 text-muted-foreground border-muted/30";
+      default: return "bg-muted/20 text-muted-foreground border-muted/30";
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Project Deliverables</h1>
-          <p className="text-muted-foreground">
-            Track your project milestones and deliverables
-          </p>
+    <div className="container mx-auto px-6 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.history.back()}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
         </div>
-
-        {/* Progress Overview */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Total</p>
-                  <p className="text-2xl font-bold">{statusCounts.total}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Completed</p>
-                  <p className="text-2xl font-bold">{statusCounts.completed}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-blue-600" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Pending</p>
-                  <p className="text-2xl font-bold">{statusCounts.pending}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Overdue</p>
-                  <p className="text-2xl font-bold">{statusCounts.overdue}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters and View Toggle */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={viewMode === 'table' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'cards' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('cards')}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Deliverables Display */}
-        {viewMode === 'table' ? (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Deliverable</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredDeliverables.map((deliverable) => {
-                  const dueDateInfo = getDaysUntilDue(deliverable.dueDate);
-                  return (
-                    <TableRow key={deliverable.id}>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <p className="font-medium">{deliverable.name}</p>
-                          <p className="text-sm text-muted-foreground">{deliverable.description}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={dueDateInfo.color}>{dueDateInfo.text}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(deliverable.status)}
-                          {getStatusBadge(deliverable.status)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          {getPriorityFlag(deliverable.priority)}
-                          <span className="capitalize">{deliverable.priority}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{deliverable.assignedTo}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredDeliverables.map((deliverable) => {
-              const dueDateInfo = getDaysUntilDue(deliverable.dueDate);
-              return (
-                <Card key={deliverable.id}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg">{deliverable.name}</CardTitle>
-                      <div className="flex items-center space-x-1">
-                        {getPriorityFlag(deliverable.priority)}
-                        {getStatusIcon(deliverable.status)}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">{deliverable.description}</p>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Due Date:</span>
-                        <span className={cn("text-sm", dueDateInfo.color)}>{dueDateInfo.text}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Status:</span>
-                        {getStatusBadge(deliverable.status)}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Assigned To:</span>
-                        <span className="text-sm">{deliverable.assignedTo}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+        <h1 className="text-3xl font-bold text-foreground mb-2">
+          Project Deliverables
+        </h1>
+        <p className="text-muted-foreground">
+          {selectedProject ? (
+            <>Track progress and milestones for <span className="font-medium">{selectedProject.name}</span></>
+          ) : (
+            "No project selected"
+          )}
+        </p>
       </div>
+
+      {/* Project Info Card */}
+      {selectedProject && (
+        <Card className="mb-6 bg-gradient-card border-border/50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">
+                  {selectedProject.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedProject.description || "No description available"}
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground mb-1">Progress</div>
+                <div className="text-2xl font-bold text-primary">
+                  {selectedProject.progress_percentage}%
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Deliverables Grid */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : projectDeliverables.length === 0 ? (
+        <Card className="bg-card border-border/50">
+          <CardContent className="text-center py-12">
+            <div className="text-muted-foreground mb-4">📋</div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              No deliverables found
+            </h3>
+            <p className="text-muted-foreground">
+              {selectedProject 
+                ? "No deliverables have been assigned to this project yet."
+                : "Please select a project to view its deliverables."
+              }
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projectDeliverables.map((deliverable) => {
+            const StatusIcon = getStatusIcon(deliverable.status);
+            const isOverdue = new Date(deliverable.due_date) < new Date() && deliverable.status !== 'completed';
+            
+            return (
+              <Card key={deliverable.id} className="bg-card border-border/50 hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-base font-semibold text-foreground mb-2 line-clamp-2">
+                        {deliverable.name}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {deliverable.description || "No description available"}
+                      </p>
+                    </div>
+                    <StatusIcon className={`h-5 w-5 flex-shrink-0 ml-2 ${
+                      deliverable.status === 'completed' ? 'text-success' :
+                      deliverable.status === 'in_progress' ? 'text-warning' :
+                      'text-muted-foreground'
+                    }`} />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Status and Priority */}
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      variant="outline"
+                      className={`text-xs ${getStatusColor(deliverable.status)}`}
+                    >
+                      {deliverable.status.replace('_', ' ')}
+                    </Badge>
+                    <Badge 
+                      variant="outline"
+                      className={`text-xs ${getPriorityColor(deliverable.priority)}`}
+                    >
+                      {deliverable.priority} priority
+                    </Badge>
+                  </div>
+
+                  {/* Due Date */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className={`${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}>
+                      Due {format(new Date(deliverable.due_date), 'MMM dd, yyyy')}
+                    </span>
+                  </div>
+
+                  {/* Time Info */}
+                  <div className="text-xs text-muted-foreground">
+                    {deliverable.completed_at ? (
+                      <span>
+                        Completed {formatDistanceToNow(new Date(deliverable.completed_at), { addSuffix: true })}
+                      </span>
+                    ) : (
+                      <span>
+                        Created {formatDistanceToNow(new Date(deliverable.created_at), { addSuffix: true })}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Overdue Warning */}
+                  {isOverdue && (
+                    <div className="text-xs text-destructive font-medium">
+                      ⚠️ Overdue
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default Deliverables;
