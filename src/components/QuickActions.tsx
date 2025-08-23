@@ -24,7 +24,7 @@ const QuickActions = ({ project }: QuickActionsProps) => {
       icon: CheckSquare,
       label: "View Deliverables", 
       description: "Check project deliverables and milestones",
-      action: () => window.location.href = "/deliverables",
+      action: () => window.location.href = "/deliverables-view",
       primary: false,
     },
     {

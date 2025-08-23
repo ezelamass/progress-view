@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { ThemeProvider } from "@/hooks/useTheme";
 import DashboardHeader from "./components/DashboardHeader";
 import AdminLayout from "./layouts/AdminLayout";
 import { AuthProvider } from "./hooks/useAuth";
@@ -13,6 +14,7 @@ import Calendar from "./pages/Calendar";
 import Payments from "./pages/Payments";
 import Help from "./pages/Help";
 import Deliverables from "./pages/Deliverables";
+import DeliverablesView from "./pages/DeliverablesView";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -28,7 +30,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   
   // Show header on main app routes (but not admin routes)
-  const showHeader = ['/', '/calendar', '/deliverables', '/help'].includes(location.pathname);
+  const showHeader = ['/', '/calendar', '/deliverables', '/deliverables-view', '/help'].includes(location.pathname);
   
   return (
     <div className="min-h-screen bg-background">
@@ -42,10 +44,11 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+    <ThemeProvider defaultTheme="dark" storageKey="client-hub-theme">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
             <AuthProvider>
               <ProjectProvider>
                 <Routes>
@@ -66,6 +69,11 @@ const App = () => (
                   <Route path="/deliverables" element={
                     <ProtectedRoute requiredRole="client">
                       <MainLayout><Deliverables /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/deliverables-view" element={
+                    <ProtectedRoute requiredRole="client">
+                      <MainLayout><DeliverablesView /></MainLayout>
                     </ProtectedRoute>
                   } />
                   <Route path="/payments" element={
@@ -99,7 +107,8 @@ const App = () => (
               </ProjectProvider>
             </AuthProvider>
       </BrowserRouter>
-    </TooltipProvider>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
