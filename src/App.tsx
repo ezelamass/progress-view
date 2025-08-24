@@ -28,7 +28,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   
   // Show header on main app routes (but not admin routes)
-  const showHeader = ['/', '/calendar', '/deliverables', '/help'].includes(location.pathname);
+  const showHeader = ['/', '/calendar', '/deliverables', '/payments', '/help'].includes(location.pathname);
   
   return (
     <div className="min-h-screen bg-background">
