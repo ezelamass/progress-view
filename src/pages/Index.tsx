@@ -42,8 +42,10 @@ const Index = () => {
           {/* Quick Actions - Top Position */}
           <QuickActions project={selectedProject} />
           
-          {/* ROI Visualizer */}
-          <ROICard project={selectedProject} />
+          {/* ROI Visualizer - Only show in production */}
+          {selectedProject?.environment === 'production' && (
+            <ROICard project={selectedProject} />
+          )}
           
           {/* Project Progress */}
           <ProjectProgress project={selectedProject} />
@@ -104,6 +106,11 @@ const Index = () => {
               <p className="text-xs text-muted-foreground">Active Sessions</p>
             </div>
           </div>
+          
+          {/* ROI Card at bottom for test environment */}
+          {selectedProject?.environment !== 'production' && (
+            <ROICard project={selectedProject} />
+          )}
         </div>
       </div>
     </div>

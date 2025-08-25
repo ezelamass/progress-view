@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useActivities } from '@/hooks/useActivities';
 import { Database } from '@/integrations/supabase/types';
 
 type Payment = Database['public']['Tables']['payments']['Row'];
@@ -21,6 +22,7 @@ export const usePayments = () => {
   const [payments, setPayments] = useState<PaymentWithProject[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { createActivity } = useActivities();
 
   const fetchPayments = async () => {
     try {
@@ -73,6 +75,15 @@ export const usePayments = () => {
       if (error) throw error;
       
       setPayments(prev => [data, ...prev]);
+      
+      // Create activity for payment creation
+      await createActivity({
+        project_id: data.project_id,
+        activity_type: 'payment_created',
+        description: `Payment of $${data.amount} was created`,
+        metadata: { payment_id: data.id, amount: data.amount }
+      });
+      
       toast({
         title: "Success",
         description: "Payment created successfully",

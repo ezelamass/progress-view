@@ -1,16 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, Calendar, CheckCircle, Clock, AlertCircle, Paperclip } from "lucide-react";
 import { useDeliverables } from "@/hooks/useDeliverables";
 import { useProjectOptional } from "@/contexts/ProjectContext";
+import { FileUpload } from "@/components/FileUpload";
 import { formatDistanceToNow, format } from "date-fns";
 
 const Deliverables = () => {
   const projectContext = useProjectOptional();
   const selectedProject = projectContext?.selectedProject;
-  const { deliverables, loading } = useDeliverables(selectedProject?.id);
+  const { deliverables, loading, updateDeliverable } = useDeliverables(selectedProject?.id);
+  const [selectedDeliverable, setSelectedDeliverable] = useState<any>(null);
+  const [fileDialogOpen, setFileDialogOpen] = useState(false);
 
   // Filter deliverables for the current project
   const projectDeliverables = deliverables.filter(
@@ -41,6 +45,18 @@ const Deliverables = () => {
       case 'medium': return "bg-warning/20 text-warning border-warning/30";
       case 'low': return "bg-muted/20 text-muted-foreground border-muted/30";
       default: return "bg-muted/20 text-muted-foreground border-muted/30";
+    }
+  };
+
+  const handleFileManagement = (deliverable: any) => {
+    setSelectedDeliverable(deliverable);
+    setFileDialogOpen(true);
+  };
+
+  const handleAttachmentsUpdate = async (attachments: any[]) => {
+    if (selectedDeliverable) {
+      await updateDeliverable(selectedDeliverable.id, { attachments });
+      setSelectedDeliverable({ ...selectedDeliverable, attachments });
     }
   };
 
@@ -157,12 +173,31 @@ const Deliverables = () => {
                     </Badge>
                   </div>
 
-                  {/* Due Date */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className={`${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}>
-                      Due {format(new Date(deliverable.due_date), 'MMM dd, yyyy')}
-                    </span>
+                  {/* Due Date and File Management */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className={`${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        Due {format(new Date(deliverable.due_date), 'MMM dd, yyyy')}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      {deliverable.attachments && Array.isArray(deliverable.attachments) && deliverable.attachments.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Paperclip className="h-3 w-3 mr-1" />
+                          {deliverable.attachments.length}
+                        </Badge>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleFileManagement(deliverable)}
+                      >
+                        <Paperclip className="h-4 w-4 mr-1" />
+                        Files
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Time Info */}
@@ -190,6 +225,23 @@ const Deliverables = () => {
           })}
         </div>
       )}
+
+      <Dialog open={fileDialogOpen} onOpenChange={setFileDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              File Management - {selectedDeliverable?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedDeliverable && (
+            <FileUpload
+              deliverableId={selectedDeliverable.id}
+              attachments={Array.isArray(selectedDeliverable.attachments) ? selectedDeliverable.attachments : []}
+              onAttachmentsChange={handleAttachmentsUpdate}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

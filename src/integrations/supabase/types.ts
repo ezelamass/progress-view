@@ -93,6 +93,7 @@ export type Database = {
       }
       deliverables: {
         Row: {
+          attachments: Json | null
           completed_at: string | null
           created_at: string
           description: string | null
@@ -105,6 +106,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attachments?: Json | null
           completed_at?: string | null
           created_at?: string
           description?: string | null
@@ -117,6 +119,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attachments?: Json | null
           completed_at?: string | null
           created_at?: string
           description?: string | null

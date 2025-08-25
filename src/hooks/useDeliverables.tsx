@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useActivities } from '@/hooks/useActivities';
 import { Database } from '@/integrations/supabase/types';
 
 type Deliverable = Database['public']['Tables']['deliverables']['Row'];
@@ -20,6 +21,7 @@ export const useDeliverables = (projectId?: string) => {
   const [deliverables, setDeliverables] = useState<DeliverableWithProject[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { createActivity } = useActivities();
 
   const fetchDeliverables = async () => {
     try {
@@ -70,6 +72,15 @@ export const useDeliverables = (projectId?: string) => {
       if (error) throw error;
       
       setDeliverables(prev => [data, ...prev]);
+      
+      // Create activity for deliverable creation
+      await createActivity({
+        project_id: data.project_id,
+        activity_type: 'deliverable_created',
+        description: `New deliverable "${data.name}" was created`,
+        metadata: { deliverable_id: data.id }
+      });
+      
       toast({
         title: "Success",
         description: "Deliverable created successfully",
@@ -108,6 +119,15 @@ export const useDeliverables = (projectId?: string) => {
       setDeliverables(prev => 
         prev.map(item => item.id === id ? data : item)
       );
+      
+      // Create activity for deliverable update
+      await createActivity({
+        project_id: data.project_id,
+        activity_type: 'deliverable_updated',
+        description: `Deliverable "${data.name}" was updated`,
+        metadata: { deliverable_id: id, changes: updates }
+      });
+      
       toast({
         title: "Success",
         description: "Deliverable updated successfully",
