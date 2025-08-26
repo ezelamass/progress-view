@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TextShimmer } from "@/components/ui/text-shimmer";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -166,6 +167,23 @@ const Help = () => {
                     </div>
                   </div>
                 ))}
+                
+                {/* Loading shimmer animation */}
+                {isLoading && (
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-8 w-8 flex-shrink-0">
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        <Bot className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="max-w-[70%] rounded-lg px-4 py-2 bg-muted text-foreground">
+                      <TextShimmer className="text-sm" duration={1.5}>
+                        Generando respuesta...
+                      </TextShimmer>
+                    </div>
+                  </div>
+                )}
               </div>
             </ScrollArea>
 
