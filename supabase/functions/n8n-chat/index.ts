@@ -67,8 +67,20 @@ serve(async (req) => {
     const responseData = await response.json();
     console.log('n8n response:', responseData);
 
-    // n8n might return an array of responses or a single response
-    const responses = Array.isArray(responseData) ? responseData : [responseData];
+    // Extract content from n8n response - handle different response formats
+    let content = '';
+    if (responseData.output) {
+      content = responseData.output;
+    } else if (responseData['output.respuesta']) {
+      content = responseData['output.respuesta'];
+    } else if (typeof responseData === 'string') {
+      content = responseData;
+    } else {
+      content = 'Respuesta recibida de n8n';
+    }
+
+    // Always return as an array with proper content extraction
+    const responses = [{ content, sender: 'ai', timestamp: new Date().toISOString() }];
 
     return new Response(JSON.stringify({ responses }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
