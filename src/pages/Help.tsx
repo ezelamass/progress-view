@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Message {
   id: string;
@@ -13,26 +16,21 @@ interface Message {
 }
 
 const Help = () => {
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "Hello! I'm your AI assistant. How can I help you with your project today?",
+      content: "¡Hola! Soy tu asistente de IA. ¿Cómo puedo ayudarte con tu proyecto hoy?",
       sender: "ai",
       timestamp: new Date(),
     },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const mockAIResponses = [
-    "I'd be happy to help you with that! Let me look into your project details.",
-    "Based on your current project status, here are some suggestions...",
-    "That's a great question! For your TechStart Solutions project, I recommend...",
-    "I can help you understand your ROI metrics better. Would you like me to explain the calculations?",
-    "Your project is currently in Week 3: Implementation phase. Is there something specific you'd like to know?",
-  ];
-
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -42,22 +40,76 @@ const Help = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageToSend = inputValue;
     setInputValue("");
+    setIsLoading(true);
 
-    // Mock AI response after a short delay
-    setTimeout(() => {
-      const aiResponse: Message = {
+    try {
+      // Generate conversation ID
+      const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+
+      // Call n8n through our edge function
+      const { data, error } = await supabase.functions.invoke('n8n-chat', {
+        body: {
+          conversationId,
+          message: messageToSend,
+          userId: user?.id,
+          userEmail: user?.email,
+          userProfile: {
+            name: profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : '',
+            role: profile?.role
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Error calling n8n-chat:', error);
+        throw new Error(error.message);
+      }
+
+      // Handle multiple responses from n8n
+      const responses = data?.responses || [];
+      
+      if (responses.length === 0) {
+        throw new Error('No response received from n8n');
+      }
+
+      // Add each response as a separate message with a delay
+      for (let i = 0; i < responses.length; i++) {
+        setTimeout(() => {
+          const aiResponse: Message = {
+            id: `${Date.now()}_${i}`,
+            content: responses[i]?.content || responses[i] || 'Respuesta recibida',
+            sender: "ai",
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, aiResponse]);
+        }, i * 500); // 500ms delay between each response
+      }
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "Hubo un problema al enviar tu mensaje. Por favor intenta nuevamente.",
+        variant: "destructive",
+      });
+
+      // Add error message
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: mockAIResponses[Math.floor(Math.random() * mockAIResponses.length)],
+        content: "Lo siento, hubo un error al procesar tu mensaje. Por favor intenta nuevamente.",
         sender: "ai",
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !isLoading) {
       handleSendMessage();
     }
   };
@@ -66,9 +118,9 @@ const Help = () => {
     <div className="container mx-auto px-6 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Help Center</h1>
+          <h1 className="text-2xl font-bold text-foreground">Centro de Ayuda</h1>
           <p className="text-muted-foreground mt-2">
-            Get instant support from our AI assistant
+            Obtén soporte instantáneo de nuestro asistente de IA
           </p>
         </div>
 
@@ -124,15 +176,20 @@ const Help = () => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type your message..."
+                  placeholder="Escribe tu mensaje..."
                   className="flex-1"
+                  disabled={isLoading}
                 />
                 <Button 
                   onClick={handleSendMessage}
                   size="sm"
-                  disabled={!inputValue.trim()}
+                  disabled={!inputValue.trim() || isLoading}
                 >
-                  <Send className="h-4 w-4" />
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
@@ -141,21 +198,21 @@ const Help = () => {
         {/* Quick Actions */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-card rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer">
-              <h3 className="font-medium text-foreground mb-2">Project Status</h3>
+              <h3 className="font-medium text-foreground mb-2">Estado del Proyecto</h3>
               <p className="text-sm text-muted-foreground">
-                Get updates on your current project progress
+                Obtén actualizaciones sobre el progreso de tu proyecto actual
               </p>
             </div>
             <div className="bg-card rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer">
-              <h3 className="font-medium text-foreground mb-2">ROI Explanation</h3>
+              <h3 className="font-medium text-foreground mb-2">Explicación del ROI</h3>
               <p className="text-sm text-muted-foreground">
-                Understand how your ROI is calculated
+                Entiende cómo se calcula tu ROI
               </p>
             </div>
             <div className="bg-card rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer">
-              <h3 className="font-medium text-foreground mb-2">Payment Support</h3>
+              <h3 className="font-medium text-foreground mb-2">Soporte de Pagos</h3>
               <p className="text-sm text-muted-foreground">
-                Questions about billing and payments
+                Preguntas sobre facturación y pagos
               </p>
             </div>
         </div>
