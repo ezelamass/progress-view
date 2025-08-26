@@ -20,6 +20,9 @@ interface FileUploadProps {
   attachments: FileAttachment[];
   onAttachmentsChange: (attachments: FileAttachment[]) => void;
   disabled?: boolean;
+  acceptedFileTypes?: string[];
+  maxFileSize?: number; // in bytes
+  fileTypeLabel?: string;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({
@@ -27,6 +30,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   attachments,
   onAttachmentsChange,
   disabled = false,
+  acceptedFileTypes = [],
+  maxFileSize = 10 * 1024 * 1024, // 10MB default
+  fileTypeLabel = "files",
 }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -35,6 +41,37 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (disabled) return;
+
+      // Validate file types if specified
+      if (acceptedFileTypes.length > 0) {
+        const invalidFiles = acceptedFiles.filter(file => {
+          const fileType = file.type.toLowerCase();
+          const fileExtension = `.${file.name.split('.').pop()?.toLowerCase()}`;
+          return !acceptedFileTypes.some(type => 
+            fileType.includes(type.toLowerCase()) || fileExtension === type.toLowerCase()
+          );
+        });
+
+        if (invalidFiles.length > 0) {
+          toast({
+            title: "Invalid File Type",
+            description: `Only ${fileTypeLabel} are allowed. Rejected: ${invalidFiles.map(f => f.name).join(', ')}`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      // Validate file sizes
+      const oversizedFiles = acceptedFiles.filter(file => file.size > maxFileSize);
+      if (oversizedFiles.length > 0) {
+        toast({
+          title: "File Too Large",
+          description: `Files must be smaller than ${formatFileSize(maxFileSize)}. Rejected: ${oversizedFiles.map(f => f.name).join(', ')}`,
+          variant: "destructive",
+        });
+        return;
+      }
 
       setUploading(true);
       setUploadProgress(0);
@@ -84,13 +121,21 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       setUploading(false);
       setUploadProgress(0);
     },
-    [deliverableId, attachments, onAttachmentsChange, disabled, toast]
+    [deliverableId, attachments, onAttachmentsChange, disabled, toast, acceptedFileTypes, maxFileSize, fileTypeLabel]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     disabled: disabled || uploading,
     multiple: true,
+    accept: acceptedFileTypes.length > 0 ? acceptedFileTypes.reduce((acc, type) => {
+      if (type.startsWith('.')) {
+        acc[`application/${type.slice(1)}`] = [type];
+      } else {
+        acc[type] = [];
+      }
+      return acc;
+    }, {} as Record<string, string[]>) : undefined,
   });
 
   const removeFile = async (attachment: FileAttachment) => {
@@ -174,7 +219,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                   Drag & drop files here, or click to select
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Support for multiple files
+                  {acceptedFileTypes.length > 0 
+                    ? `Support for ${fileTypeLabel} (${acceptedFileTypes.join(', ')}) • Max ${formatFileSize(maxFileSize)}`
+                    : `Support for multiple files • Max ${formatFileSize(maxFileSize)}`
+                  }
                 </p>
               </div>
             )}

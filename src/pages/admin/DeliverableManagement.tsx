@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Search, Calendar, CheckCircle, Clock, AlertTriangle, Flag, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Calendar, CheckCircle, Clock, AlertTriangle, Flag, Edit, Trash2, FileText } from "lucide-react";
+import { FileUpload } from "@/components/FileUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +75,7 @@ export default function DeliverableManagement() {
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDeliverable, setEditingDeliverable] = useState<any>(null);
+  const [pdfAttachments, setPdfAttachments] = useState<any[]>([]);
   
   const { deliverables, loading, createDeliverable, updateDeliverable, deleteDeliverable, updateDeliverableStatus } = useDeliverables();
   const { projects, loading: projectsLoading } = useProjects();
@@ -113,6 +115,7 @@ export default function DeliverableManagement() {
         description: values.description || null,
         due_date: values.due_date.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
         priority: values.priority,
+        attachments: pdfAttachments,
       };
 
       if (editingDeliverable) {
@@ -123,6 +126,7 @@ export default function DeliverableManagement() {
 
       setIsDialogOpen(false);
       setEditingDeliverable(null);
+      setPdfAttachments([]);
       form.reset();
     } catch (error) {
       console.error('Error submitting deliverable:', error);
@@ -131,6 +135,7 @@ export default function DeliverableManagement() {
 
   const handleEdit = (deliverable: any) => {
     setEditingDeliverable(deliverable);
+    setPdfAttachments(Array.isArray(deliverable.attachments) ? deliverable.attachments : []);
     form.reset({
       project_id: deliverable.project_id,
       name: deliverable.name,
@@ -286,7 +291,7 @@ export default function DeliverableManagement() {
                     </FormItem>
                   )}
                 />
-                <FormField
+                 <FormField
                   control={form.control}
                   name="priority"
                   render={({ field }) => (
@@ -308,6 +313,29 @@ export default function DeliverableManagement() {
                     </FormItem>
                   )}
                  />
+                 
+                {/* PDF Upload Section */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">PDF Documents</label>
+                  <p className="text-xs text-muted-foreground">Upload PDF files for this deliverable</p>
+                  {editingDeliverable && (
+                    <FileUpload
+                      deliverableId={editingDeliverable.id}
+                      attachments={pdfAttachments}
+                      onAttachmentsChange={setPdfAttachments}
+                      acceptedFileTypes={['application/pdf', '.pdf']}
+                      maxFileSize={10 * 1024 * 1024} // 10MB
+                      fileTypeLabel="PDF files"
+                    />
+                  )}
+                  {!editingDeliverable && (
+                    <div className="p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg text-center text-sm text-muted-foreground">
+                      <FileText className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                      Save deliverable first to upload PDF files
+                    </div>
+                  )}
+                </div>
+                
                 <DialogFooter>
                   <Button type="submit">
                     {editingDeliverable ? 'Update Deliverable' : 'Create Deliverable'}
@@ -428,6 +456,7 @@ export default function DeliverableManagement() {
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Priority</TableHead>
+              <TableHead>PDFs</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -472,7 +501,20 @@ export default function DeliverableManagement() {
                     <span className="capitalize">{deliverable.priority}</span>
                   </div>
                 </TableCell>
-                
+                <TableCell>
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">
+                      {Array.isArray(deliverable.attachments) 
+                        ? deliverable.attachments.filter((att: any) => 
+                            att && typeof att === 'object' && att.fileName && 
+                            att.fileName.toLowerCase().endsWith('.pdf')
+                          ).length 
+                        : 0
+                      }
+                    </span>
+                  </div>
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-2">
                     <Button

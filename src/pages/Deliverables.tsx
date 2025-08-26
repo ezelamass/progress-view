@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Calendar, CheckCircle, Clock, AlertCircle, Paperclip } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle, Clock, AlertCircle, Paperclip, Download } from "lucide-react";
 import { useDeliverables } from "@/hooks/useDeliverables";
 import { useProjectOptional } from "@/contexts/ProjectContext";
 import { FileUpload } from "@/components/FileUpload";
+import { PDFManager } from "@/components/PDFManager";
 import { formatDistanceToNow, format } from "date-fns";
 
 const Deliverables = () => {
@@ -189,14 +190,18 @@ const Deliverables = () => {
                           {deliverable.attachments.length}
                         </Badge>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleFileManagement(deliverable)}
-                      >
-                        <Paperclip className="h-4 w-4 mr-1" />
-                        Files
-                      </Button>
+                      {Array.isArray(deliverable.attachments) && deliverable.attachments.length > 0 ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleFileManagement(deliverable)}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download PDFs
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No PDFs available</span>
+                      )}
                     </div>
                   </div>
 
@@ -230,14 +235,14 @@ const Deliverables = () => {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              File Management - {selectedDeliverable?.name}
+              PDF Documents
             </DialogTitle>
           </DialogHeader>
           {selectedDeliverable && (
-            <FileUpload
-              deliverableId={selectedDeliverable.id}
+            <PDFManager
               attachments={Array.isArray(selectedDeliverable.attachments) ? selectedDeliverable.attachments : []}
-              onAttachmentsChange={handleAttachmentsUpdate}
+              deliverableName={selectedDeliverable.name}
+              isClientView={true}
             />
           )}
         </DialogContent>
