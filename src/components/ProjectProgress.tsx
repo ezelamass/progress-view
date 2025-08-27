@@ -40,26 +40,31 @@ const ProjectProgress = ({ project }: ProjectProgressProps) => {
   const startDate = new Date(project.start_date);
   const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   
+  // Calculate phase dates to match Calendar.tsx
+  const totalDuration = endDate.getTime() - startDate.getTime();
+  const implementationDuration = totalDuration - (2 * 7 * 24 * 60 * 60 * 1000); // Total minus first and last week
+  
   const phases = [
     { 
-      name: "Setup", 
+      name: "Setup & Info Collection", 
       status: currentProgress >= 25 ? "completed" : currentProgress > 0 ? "current" : "upcoming", 
-      week: "Week 1" 
+      week: "Week 1",
+      startDate: startDate,
+      endDate: new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000))
     },
     { 
-      name: "Implementation", 
+      name: "Implementation & Development", 
       status: currentProgress >= 75 ? "completed" : currentProgress >= 25 ? "current" : "upcoming", 
-      week: "Week 2-3" 
+      week: "Weeks 2-4",
+      startDate: new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000)),
+      endDate: new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000))
     },
     { 
-      name: "Testing", 
-      status: currentProgress >= 90 ? "completed" : currentProgress >= 75 ? "current" : "upcoming", 
-      week: "Week 4" 
-    },
-    { 
-      name: "Deployment", 
-      status: currentProgress >= 100 ? "completed" : currentProgress >= 90 ? "current" : "upcoming", 
-      week: "Week 5" 
+      name: "Testing & Go-Live", 
+      status: currentProgress >= 100 ? "completed" : currentProgress >= 75 ? "current" : "upcoming", 
+      week: "Final Week",
+      startDate: new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000)),
+      endDate: endDate
     },
   ];
 

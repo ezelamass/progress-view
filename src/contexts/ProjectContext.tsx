@@ -13,27 +13,42 @@ interface ProjectContextType {
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider = ({ children }: { children: React.ReactNode }) => {
-  const { user, profile } = useAuth();
-  const { projects, loading, refetch } = useProjects();
+  const { user, profile, loading: authLoading } = useAuth();
+  const { projects, loading: projectsLoading, refetch } = useProjects();
   const [selectedProject, setSelectedProjectState] = useState<ProjectWithClient | null>(null);
 
   // Auto-select first project for clients, or use stored selection
   useEffect(() => {
-    if (!loading && projects.length > 0 && !selectedProject) {
-      const storedProjectId = localStorage.getItem('selectedProjectId');
-      
-      if (storedProjectId) {
-        const storedProject = projects.find(p => p.id === storedProjectId);
-        if (storedProject) {
-          setSelectedProjectState(storedProject);
-          return;
+    // Wait for both auth and projects to load
+    if (!authLoading && !projectsLoading && profile?.role === 'client' && projects.length > 0) {
+      if (!selectedProject) {
+        const storedProjectId = localStorage.getItem('selectedProjectId');
+        
+        if (storedProjectId) {
+          const storedProject = projects.find(p => p.id === storedProjectId);
+          if (storedProject) {
+            setSelectedProjectState(storedProject);
+            return;
+          }
         }
+        
+        // Default to first project
+        setSelectedProjectState(projects[0]);
       }
-      
-      // Default to first project
-      setSelectedProjectState(projects[0]);
     }
-  }, [loading, projects, selectedProject]);
+  }, [authLoading, projectsLoading, projects, selectedProject, profile?.role]);
+
+  // Reset selected project when user changes or projects change
+  useEffect(() => {
+    if (!authLoading && profile?.role === 'client') {
+      if (projects.length === 0) {
+        setSelectedProjectState(null);
+      } else if (selectedProject && !projects.find(p => p.id === selectedProject.id)) {
+        // Current selected project is no longer available, select first available
+        setSelectedProjectState(projects[0]);
+      }
+    }
+  }, [projects, selectedProject, profile?.role, authLoading]);
 
   // Persist selected project to localStorage
   const setSelectedProject = (project: ProjectWithClient | null) => {
@@ -54,7 +69,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     <ProjectContext.Provider value={{
       selectedProject,
       projects,
-      loading,
+      loading: authLoading || projectsLoading,
       setSelectedProject,
       refetch,
     }}>
