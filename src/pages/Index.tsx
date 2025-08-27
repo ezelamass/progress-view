@@ -2,6 +2,7 @@ import ROICard from "@/components/ROICard";
 import ProjectProgress from "@/components/ProjectProgress";
 import QuickActions from "@/components/QuickActions";
 import RecentActivity from "@/components/RecentActivity";
+import { MeetingHistory } from "@/components/MeetingHistory";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectOptional } from "@/contexts/ProjectContext";
@@ -55,6 +56,9 @@ const Index = () => {
         <div className="space-y-6">
           {/* Recent Activity */}
           <RecentActivity project={selectedProject} />
+          
+          {/* Meeting History */}
+          <MeetingHistory />
           
           {/* Statistics */}
           <div className="bg-card border border-border/50 rounded-lg p-6 relative">

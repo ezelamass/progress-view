@@ -12,7 +12,8 @@ import {
   LogOut,
   User,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Video
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,6 +53,11 @@ const adminNavItems = [
     title: "Payments",
     href: "/admin/payments",
     icon: CreditCard,
+  },
+  {
+    title: "Meetings",
+    href: "/admin/meetings",
+    icon: Video,
   },
   {
     title: "Settings",

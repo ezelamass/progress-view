@@ -20,6 +20,7 @@ import ClientManagement from "./pages/admin/ClientManagement";
 import ProjectManagement from "./pages/admin/ProjectManagement";
 import PaymentManagement from "./pages/admin/PaymentManagement";
 import DeliverableManagement from "./pages/admin/DeliverableManagement";
+import MeetingManagement from "./pages/admin/MeetingManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 
 const queryClient = new QueryClient();
@@ -90,6 +91,7 @@ const App = () => (
                     <Route path="projects" element={<ProjectManagement />} />
                     <Route path="deliverables" element={<DeliverableManagement />} />
                     <Route path="payments" element={<PaymentManagement />} />
+                    <Route path="meetings" element={<MeetingManagement />} />
                     <Route path="settings" element={<AdminSettings />} />
                   </Route>
                   
