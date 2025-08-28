@@ -99,6 +99,7 @@ export type Database = {
           description: string | null
           due_date: string
           id: string
+          loom_url: string | null
           name: string
           priority: Database["public"]["Enums"]["deliverable_priority"]
           project_id: string
@@ -112,6 +113,7 @@ export type Database = {
           description?: string | null
           due_date: string
           id?: string
+          loom_url?: string | null
           name: string
           priority?: Database["public"]["Enums"]["deliverable_priority"]
           project_id: string
@@ -125,6 +127,7 @@ export type Database = {
           description?: string | null
           due_date?: string
           id?: string
+          loom_url?: string | null
           name?: string
           priority?: Database["public"]["Enums"]["deliverable_priority"]
           project_id?: string

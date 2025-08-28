@@ -8,6 +8,7 @@ export interface Deliverable {
   status: 'pending' | 'in_progress' | 'completed' | 'overdue';
   priority: 'low' | 'medium' | 'high';
   assignedTo?: string;
+  loomUrl?: string;
   completedAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -20,6 +21,7 @@ export interface DeliverableFormData {
   dueDate: string;
   priority: 'low' | 'medium' | 'high';
   assignedTo?: string;
+  loomUrl?: string;
 }
 
 export const mockDeliverables: Deliverable[] = [

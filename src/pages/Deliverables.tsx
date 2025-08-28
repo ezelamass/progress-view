@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Calendar, CheckCircle, Clock, AlertCircle, Paperclip, Download } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle, Clock, AlertCircle, Paperclip, Download, Video } from "lucide-react";
 import { useDeliverables } from "@/hooks/useDeliverables";
 import { useProjectOptional } from "@/contexts/ProjectContext";
 import { FileUpload } from "@/components/FileUpload";
@@ -204,6 +204,21 @@ const Deliverables = () => {
                       )}
                     </div>
                   </div>
+
+                  {/* Loom Video Link */}
+                  {deliverable.loom_url && (
+                    <div className="flex items-center gap-2">
+                      <Video className="h-4 w-4 text-primary" />
+                      <a 
+                        href={deliverable.loom_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80 text-sm font-medium underline"
+                      >
+                        Watch Loom Video
+                      </a>
+                    </div>
+                  )}
 
                   {/* Time Info */}
                   <div className="text-xs text-muted-foreground">

@@ -29,6 +29,7 @@ const deliverableFormSchema = z.object({
     required_error: "Due date is required",
   }),
   priority: z.enum(["low", "medium", "high"]),
+  loom_url: z.string().url().optional().or(z.literal("")),
 });
 
 const getStatusIcon = (status: string) => {
@@ -87,6 +88,7 @@ export default function DeliverableManagement() {
       name: "",
       description: "",
       priority: "medium",
+      loom_url: "",
     },
   });
 
@@ -116,6 +118,7 @@ export default function DeliverableManagement() {
         due_date: values.due_date.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
         priority: values.priority,
         attachments: pdfAttachments,
+        loom_url: values.loom_url || null,
       };
 
       if (editingDeliverable) {
@@ -142,6 +145,7 @@ export default function DeliverableManagement() {
       description: deliverable.description || "",
       due_date: new Date(deliverable.due_date),
       priority: deliverable.priority,
+      loom_url: deliverable.loom_url || "",
     });
     setIsDialogOpen(true);
   };
@@ -313,8 +317,25 @@ export default function DeliverableManagement() {
                     </FormItem>
                   )}
                  />
-                 
-                {/* PDF Upload Section */}
+
+                 <FormField
+                   control={form.control}
+                   name="loom_url"
+                   render={({ field }) => (
+                     <FormItem>
+                       <FormLabel>Loom Video URL (Optional)</FormLabel>
+                       <FormControl>
+                         <Input 
+                           placeholder="https://www.loom.com/share/..."
+                           {...field}
+                         />
+                       </FormControl>
+                       <FormMessage />
+                     </FormItem>
+                   )}
+                 />
+                  
+                 {/* PDF Upload Section */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">PDF Documents</label>
                   <p className="text-xs text-muted-foreground">Upload PDF files for this deliverable</p>
@@ -456,6 +477,7 @@ export default function DeliverableManagement() {
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Priority</TableHead>
+              <TableHead>Loom</TableHead>
               <TableHead>PDFs</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -500,6 +522,20 @@ export default function DeliverableManagement() {
                     {getPriorityFlag(deliverable.priority)}
                     <span className="capitalize">{deliverable.priority}</span>
                   </div>
+                </TableCell>
+                <TableCell>
+                  {deliverable.loom_url ? (
+                    <a 
+                      href={deliverable.loom_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:text-primary/80 text-sm font-medium"
+                    >
+                      View Video
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">-</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
