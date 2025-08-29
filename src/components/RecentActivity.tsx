@@ -12,7 +12,7 @@ interface RecentActivityProps {
 }
 
 const RecentActivity = ({ project }: RecentActivityProps) => {
-  const { activities, loading, refetch } = useActivities(project?.id, 5);
+  const { activities, loading, refetch } = useActivities(project?.id, 2);
 
   // Set up real-time listeners for project-specific updates
   useEffect(() => {

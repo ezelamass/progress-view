@@ -13,7 +13,8 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
-  Video
+  Video,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,6 +44,11 @@ const adminNavItems = [
     title: "Projects",
     href: "/admin/projects",
     icon: FolderKanban,
+  },
+  {
+    title: "Phases",
+    href: "/admin/phases",
+    icon: Calendar,
   },
   {
     title: "Deliverables",
