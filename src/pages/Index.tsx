@@ -12,8 +12,15 @@ const Index = () => {
   const projectContext = useProjectOptional();
   const selectedProject = projectContext?.selectedProject;
 
-  // Get display name
+  // Get display name from client company
   const getDisplayName = () => {
+    // Try to get client company name first
+    const clientCompany = selectedProject?.clients?.company || selectedProject?.clients?.name;
+    if (clientCompany) {
+      return clientCompany;
+    }
+    
+    // Fallback to user name
     if (profile?.first_name) {
       return profile.first_name;
     }
@@ -50,6 +57,11 @@ const Index = () => {
           
           {/* Project Progress */}
           <ProjectProgress project={selectedProject} />
+          
+          {/* ROI Card for test environment - moved here */}
+          {selectedProject?.environment !== 'production' && (
+            <ROICard project={selectedProject} />
+          )}
         </div>
 
         {/* Right Column - Sidebar Content */}
@@ -111,10 +123,7 @@ const Index = () => {
             </div>
           </div>
           
-          {/* ROI Card at bottom for test environment */}
-          {selectedProject?.environment !== 'production' && (
-            <ROICard project={selectedProject} />
-          )}
+          {/* Empty space for balance */}
         </div>
       </div>
     </div>

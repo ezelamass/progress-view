@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useDeliverables } from "@/hooks/useDeliverables";
+import { usePhases } from "@/hooks/usePhases";
 import { format } from "date-fns";
 
 interface ProjectPhase {
@@ -28,6 +29,7 @@ const Calendar = () => {
   
   const { selectedProject } = useProject();
   const { deliverables, loading } = useDeliverables(selectedProject?.id || undefined);
+  const { phases, loading: phasesLoading } = usePhases(selectedProject?.id);
   
   if (!selectedProject) {
     return (
@@ -46,41 +48,28 @@ const Calendar = () => {
     );
   }
 
-  // Generate project phases based on timeline and progress
-  const startDate = new Date(selectedProject.start_date);
-  const endDate = new Date(selectedProject.end_date);
-  const progress = selectedProject.progress_percentage;
-  
-  const projectPhases: ProjectPhase[] = [
+  // Use real phases from database or fallback to default phases
+  const projectPhases: ProjectPhase[] = phases.length > 0 ? phases.map(phase => ({
+    id: phase.id,
+    name: phase.name,
+    description: phase.description || '',
+    startDate: new Date(phase.start_date),
+    endDate: new Date(phase.end_date),
+    status: phase.status,
+    progress: 0, // We don't show progress in calendar
+    color: phase.phase_type === 'descubrimiento' ? 'bg-green-500' : 
+           phase.phase_type === 'desarrollo' ? 'bg-blue-500' : 'bg-purple-500'
+  })) : [
+    // Fallback phases if no phases defined
     {
       id: "1",
       name: "Setup & Info Collection",
       description: "Initial setup, requirements gathering, and stakeholder interviews",
-      startDate: startDate,
-      endDate: new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000)), // 1 week
-      status: progress >= 25 ? 'completed' : progress > 0 ? 'in_progress' : 'not_started',
-      progress: Math.min(progress * 4, 100), // First 25% of project
+      startDate: new Date(selectedProject.start_date),
+      endDate: new Date(new Date(selectedProject.start_date).getTime() + (7 * 24 * 60 * 60 * 1000)),
+      status: 'not_started' as const,
+      progress: 0,
       color: 'bg-green-500'
-    },
-    {
-      id: "2", 
-      name: "Implementation & Development",
-      description: "Core development work and feature implementation",
-      startDate: new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000)), // Week 2
-      endDate: new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000)), // Until last week
-      status: progress >= 75 ? 'completed' : progress >= 25 ? 'in_progress' : 'not_started',
-      progress: Math.max(0, Math.min((progress - 25) * 2, 100)), // 25% to 75% of project
-      color: 'bg-blue-500'
-    },
-    {
-      id: "3",
-      name: "Testing & Go-Live", 
-      description: "Quality assurance, final testing, and production deployment",
-      startDate: new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000)), // Last week
-      endDate: endDate,
-      status: progress >= 100 ? 'completed' : progress >= 75 ? 'in_progress' : 'not_started',
-      progress: Math.max(0, (progress - 75) * 4), // Last 25% of project
-      color: 'bg-purple-500'
     }
   ];
 

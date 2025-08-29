@@ -7,12 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectOptional } from "@/contexts/ProjectContext";
+import { useState } from "react";
+import AccountSettings from "@/components/AccountSettings";
+import ProfileDialog from "@/components/ProfileDialog";
 const DashboardHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, signOut } = useAuth();
   const projectContext = useProjectOptional();
   const { selectedProject, projects, setSelectedProject } = projectContext || { selectedProject: null, projects: [], setSelectedProject: () => {} };
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   
   const displayName = profile 
     ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email
@@ -83,7 +88,9 @@ const DashboardHeader = () => {
               <span className="text-sm font-bold text-primary-foreground">TS</span>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-foreground">TechStart Solutions</h1>
+              <h1 className="text-lg font-semibold text-foreground">
+                {selectedProject?.clients?.company || selectedProject?.clients?.name || 'Client Portal'}
+              </h1>
               <p className="text-xs text-muted-foreground">Client Portal</p>
             </div>
           </div>
@@ -157,7 +164,7 @@ const DashboardHeader = () => {
                   </>
                 )}
                 
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowProfile(true)}>
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
@@ -167,7 +174,7 @@ const DashboardHeader = () => {
                     Payment History
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowAccountSettings(true)}>
                   <Settings className="mr-2 h-4 w-4" />
                   Account Settings
                 </DropdownMenuItem>
@@ -181,6 +188,16 @@ const DashboardHeader = () => {
           </div>
         </div>
       </div>
+      
+      <AccountSettings 
+        open={showAccountSettings} 
+        onOpenChange={setShowAccountSettings} 
+      />
+      
+      <ProfileDialog 
+        open={showProfile} 
+        onOpenChange={setShowProfile} 
+      />
     </header>;
 };
 export default DashboardHeader;
