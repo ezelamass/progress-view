@@ -1,8 +1,9 @@
-import { Monitor, Moon, Sun, Globe, Check } from "lucide-react";
+import { Monitor, Moon, Sun, Globe, Check, Play } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useState } from "react";
 
 interface AccountSettingsProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface AccountSettingsProps {
 
 const AccountSettings = ({ open, onOpenChange }: AccountSettingsProps) => {
   const { theme, language, setTheme, setLanguage } = useTheme();
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const themes = [
     { value: 'dark', label: 'Dark', labelEs: 'Oscuro', icon: Moon },
@@ -98,8 +100,54 @@ const AccountSettings = ({ open, onOpenChange }: AccountSettingsProps) => {
               })}
             </CardContent>
           </Card>
+
+          {/* Tutorial Section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Play className="h-4 w-4" />
+                {language === 'es' ? 'Tutorial' : 'Tutorial'}
+              </CardTitle>
+              <CardDescription className="text-sm">
+                {language === 'es' 
+                  ? 'Aprende a usar la plataforma' 
+                  : 'Learn how to use the platform'
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+                onClick={() => setShowTutorial(true)}
+              >
+                <Play className="h-4 w-4" />
+                {language === 'es' ? 'Ver Tutorial' : 'View Tutorial'}
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </DialogContent>
+
+      {/* Tutorial Video Dialog */}
+      <Dialog open={showTutorial} onOpenChange={setShowTutorial}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>
+              {language === 'es' ? 'Tutorial de la Plataforma' : 'Platform Tutorial'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video">
+            {/* Video Tutorial Loom */}
+            <iframe
+              src="https://www.loom.com/embed/fa5dc15b0c4c4c549d110c3b23bbd6c2"
+              frameBorder="0"
+              allowFullScreen
+              className="w-full h-full rounded-lg"
+            ></iframe>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

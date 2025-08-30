@@ -119,7 +119,6 @@ const DashboardHeader = () => {
                       {initials}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:block text-sm text-foreground">{displayName}</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
