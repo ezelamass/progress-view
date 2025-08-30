@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface QuickActionsProps {
   project?: {
@@ -14,25 +15,26 @@ interface QuickActionsProps {
 
 const QuickActions = ({ project }: QuickActionsProps) => {
   const navigate = useNavigate();
+  const { language } = useTheme();
   const actions = [
     {
       icon: Calendar,
-      label: "Schedule Follow-up",
-      description: "Book a new meeting with team members",
+      label: language === 'es' ? "Programar Seguimiento" : "Schedule Follow-up",
+      description: language === 'es' ? "Reservar una nueva reunión con el equipo" : "Book a new meeting with team members",
       action: () => window.open("https://calendly.com/ezequiellamas-advantx/15min-seguimiento", "_blank"),
       primary: true,
     },
     {
       icon: CheckSquare,
-      label: "View Deliverables", 
-      description: "Check project deliverables and milestones",
+      label: language === 'es' ? "Ver Entregables" : "View Deliverables", 
+      description: language === 'es' ? "Verificar entregables e hitos del proyecto" : "Check project deliverables and milestones",
       action: () => navigate("/deliverables"),
       primary: false,
     },
     {
       icon: Folder,
-      label: "Manage Files",
-      description: "Upload, organize and share project files",
+      label: language === 'es' ? "Gestionar Archivos" : "Manage Files",
+      description: language === 'es' ? "Subir, organizar y compartir archivos del proyecto" : "Upload, organize and share project files",
       action: () => {
         if (project?.drive_folder_url) {
           window.open(project.drive_folder_url, "_blank");
@@ -44,8 +46,8 @@ const QuickActions = ({ project }: QuickActionsProps) => {
     },
     {
       icon: GraduationCap,
-      label: "Learn Section",
-      description: "Access tutorials and documentation", 
+      label: language === 'es' ? "Sección de Aprendizaje" : "Learn Section",
+      description: language === 'es' ? "Acceder a tutoriales y documentación" : "Access tutorials and documentation", 
       action: () => console.log("Coming soon"),
       primary: false,
       comingSoon: true,
@@ -55,8 +57,12 @@ const QuickActions = ({ project }: QuickActionsProps) => {
   return (
     <Card className="bg-card border-border/50">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium text-muted-foreground">Quick Actions</CardTitle>
-        <p className="text-xs text-muted-foreground">Frequently used actions and shortcuts</p>
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {language === 'es' ? 'Acciones Rápidas' : 'Quick Actions'}
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          {language === 'es' ? 'Acciones y atajos usados frecuentemente' : 'Frequently used actions and shortcuts'}
+        </p>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3">
@@ -81,7 +87,7 @@ const QuickActions = ({ project }: QuickActionsProps) => {
                   variant="secondary" 
                   className="absolute -top-1 -right-1 text-xs px-2 py-0 bg-muted text-muted-foreground"
                 >
-                  Coming Soon
+                  {language === 'es' ? 'Próximamente' : 'Coming Soon'}
                 </Badge>
               )}
             </div>

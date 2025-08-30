@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useDeliverables } from "@/hooks/useDeliverables";
 import { usePhases } from "@/hooks/usePhases";
+import { useTheme } from "@/contexts/ThemeContext";
 import { format } from "date-fns";
 
 interface ProjectPhase {
@@ -26,6 +27,7 @@ const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedPhase, setSelectedPhase] = useState<ProjectPhase | null>(null);
   const [selectedDeliverable, setSelectedDeliverable] = useState<any>(null);
+  const { language } = useTheme();
   
   const { selectedProject } = useProject();
   const { deliverables, loading } = useDeliverables(selectedProject?.id || undefined);
@@ -39,7 +41,7 @@ const Calendar = () => {
             <div className="text-center">
               <div className="text-muted-foreground mb-2">📅</div>
               <p className="text-sm text-muted-foreground">
-                Select a project to view calendar
+                {language === 'es' ? 'Selecciona un proyecto para ver el calendario' : 'Select a project to view calendar'}
               </p>
             </div>
           </CardContent>
@@ -73,12 +75,17 @@ const Calendar = () => {
     }
   ];
 
-  const monthNames = [
+  const monthNames = language === 'es' ? [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ] : [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
 
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNames = language === 'es' ? 
+    ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"] : 
+    ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -209,7 +216,7 @@ const Calendar = () => {
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={goToToday}>
-                Today
+                {language === 'es' ? 'Hoy' : 'Today'}
               </Button>
             </div>
           </CardHeader>

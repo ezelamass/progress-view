@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ProjectWithClient } from "@/hooks/useProjects";
 import { usePhases } from "@/hooks/usePhases";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface ProjectProgressProps {
   project?: ProjectWithClient | null;
@@ -11,19 +12,22 @@ interface ProjectProgressProps {
 
 const ProjectProgress = ({ project }: ProjectProgressProps) => {
   const { phases, loading: phasesLoading } = usePhases(project?.id);
+  const { language } = useTheme();
 
   if (!project) {
     return (
       <Card className="bg-gradient-card border-border/50 shadow-card">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold text-foreground">Project Progress</CardTitle>
+          <CardTitle className="text-lg font-semibold text-foreground">
+            {language === 'es' ? 'Progreso del Proyecto' : 'Project Progress'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="text-muted-foreground mb-2">📈</div>
               <p className="text-sm text-muted-foreground">
-                Select a project to view progress
+                {language === 'es' ? 'Selecciona un proyecto para ver el progreso' : 'Select a project to view progress'}
               </p>
             </div>
           </div>
@@ -93,11 +97,15 @@ const ProjectProgress = ({ project }: ProjectProgressProps) => {
   return (
     <Card className="bg-gradient-card border-border/50 shadow-card">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-foreground">Project Progress</CardTitle>
+        <CardTitle className="text-lg font-semibold text-foreground">
+          {language === 'es' ? 'Progreso del Proyecto' : 'Project Progress'}
+        </CardTitle>
           <div className="flex items-center justify-between mt-2">
             <span className="text-2xl font-bold text-primary">{timeBasedProgress}%</span>
             <div className="text-right">
-              <div className="text-sm text-muted-foreground">Days remaining</div>
+              <div className="text-sm text-muted-foreground">
+                {language === 'es' ? 'Días restantes' : 'Days remaining'}
+              </div>
               <div className="text-lg font-semibold text-foreground">{daysRemaining}</div>
             </div>
           </div>
@@ -106,8 +114,12 @@ const ProjectProgress = ({ project }: ProjectProgressProps) => {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Overall Progress</span>
-            <span className="text-foreground font-medium">{timeBasedProgress}% Complete</span>
+            <span className="text-muted-foreground">
+              {language === 'es' ? 'Progreso General' : 'Overall Progress'}
+            </span>
+            <span className="text-foreground font-medium">
+              {language === 'es' ? `${timeBasedProgress}% Completado` : `${timeBasedProgress}% Complete`}
+            </span>
           </div>
           <Progress 
             value={timeBasedProgress} 
@@ -116,7 +128,9 @@ const ProjectProgress = ({ project }: ProjectProgressProps) => {
         </div>
 
         <div className="space-y-3 pt-2">
-          <h4 className="text-sm font-medium text-foreground">Project Phases</h4>
+          <h4 className="text-sm font-medium text-foreground">
+            {language === 'es' ? 'Fases del Proyecto' : 'Project Phases'}
+          </h4>
           {phasesLoading ? (
             <div className="flex items-center justify-center py-4">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
@@ -136,7 +150,12 @@ const ProjectProgress = ({ project }: ProjectProgressProps) => {
                     variant="outline"
                     className={`text-xs ${getStatusColor(phase.status)}`}
                   >
-                    {phase.status === "completed" ? "Done" : phase.status === "in_progress" ? "In Progress" : "Pending"}
+                    {phase.status === "completed" 
+                      ? (language === 'es' ? "Completado" : "Done")
+                      : phase.status === "in_progress" 
+                        ? (language === 'es' ? "En Progreso" : "In Progress")
+                        : (language === 'es' ? "Pendiente" : "Pending")
+                    }
                   </Badge>
                 </div>
               ))}

@@ -1,4 +1,5 @@
 import { Bell, ChevronDown, User, Settings, LogOut, CreditCard, Home, Calendar, HelpCircle, Building2 } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -18,6 +19,7 @@ const DashboardHeader = () => {
   const { selectedProject, projects, setSelectedProject } = projectContext || { selectedProject: null, projects: [], setSelectedProject: () => {} };
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const { language } = useTheme();
   
   const displayName = profile 
     ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email
@@ -41,13 +43,13 @@ const DashboardHeader = () => {
     }
   };
   const tabs = [{
-    title: "Dashboard",
+    title: language === 'es' ? "Panel" : "Dashboard",
     icon: Home
   }, {
-    title: "Calendar",
+    title: language === 'es' ? "Calendario" : "Calendar",
     icon: Calendar
   }, {
-    title: "Help",
+    title: language === 'es' ? "Ayuda" : "Help",
     icon: HelpCircle
   }];
 
@@ -85,13 +87,17 @@ const DashboardHeader = () => {
           {/* Company Logo and Name */}
           <div className="flex items-center space-x-3">
             <div className="h-8 w-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <span className="text-sm font-bold text-primary-foreground">TS</span>
+              <span className="text-sm font-bold text-primary-foreground">
+                {selectedProject?.clients?.company?.substring(0, 2) || selectedProject?.clients?.name?.substring(0, 2) || 'CP'}
+              </span>
             </div>
             <div>
               <h1 className="text-lg font-semibold text-foreground">
                 {selectedProject?.clients?.company || selectedProject?.clients?.name || 'Client Portal'}
               </h1>
-              <p className="text-xs text-muted-foreground">Client Portal</p>
+              <p className="text-xs text-muted-foreground">
+                {language === 'es' ? 'Portal del Cliente' : 'Client Portal'}
+              </p>
             </div>
           </div>
 
@@ -130,7 +136,7 @@ const DashboardHeader = () => {
                 {profile?.role === 'client' && projects.length > 1 && (
                   <>
                     <DropdownMenuLabel className="text-xs text-muted-foreground">
-                      Switch Project
+                      {language === 'es' ? 'Cambiar Proyecto' : 'Switch Project'}
                     </DropdownMenuLabel>
                     {projects.map((project) => (
                       <DropdownMenuItem
@@ -166,22 +172,22 @@ const DashboardHeader = () => {
                 
                 <DropdownMenuItem onClick={() => setShowProfile(true)}>
                   <User className="mr-2 h-4 w-4" />
-                  Profile
+                  {language === 'es' ? 'Perfil' : 'Profile'}
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/payments" className="cursor-pointer flex">
                     <CreditCard className="mr-2 h-4 w-4" />
-                    Payment History
+                    {language === 'es' ? 'Historial de Pagos' : 'Payment History'}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowAccountSettings(true)}>
                   <Settings className="mr-2 h-4 w-4" />
-                  Account Settings
+                  {language === 'es' ? 'Configuración de Cuenta' : 'Account Settings'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
+                  {language === 'es' ? 'Cerrar Sesión' : 'Sign Out'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -6,18 +6,20 @@ import { MeetingHistory } from "@/components/MeetingHistory";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectOptional } from "@/contexts/ProjectContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Index = () => {
   const { profile } = useAuth();
   const projectContext = useProjectOptional();
   const selectedProject = projectContext?.selectedProject;
+  const { language } = useTheme();
 
-  // Get display name from client company
+  // Get display name from client name
   const getDisplayName = () => {
-    // Try to get client company name first
-    const clientCompany = selectedProject?.clients?.company || selectedProject?.clients?.name;
-    if (clientCompany) {
-      return clientCompany;
+    // Try to get client name first
+    const clientName = selectedProject?.clients?.name;
+    if (clientName) {
+      return clientName;
     }
     
     // Fallback to user name
@@ -35,10 +37,13 @@ const Index = () => {
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          Welcome back, {getDisplayName()}
+          {language === 'es' ? `Bienvenido de vuelta, ${getDisplayName()}` : `Welcome back, ${getDisplayName()}`}
         </h1>
         <p className="text-muted-foreground">
-          Here's an overview of your project progress and recent updates.
+          {language === 'es' 
+            ? 'Aquí tienes un resumen del progreso de tu proyecto y las actualizaciones recientes.'
+            : "Here's an overview of your project progress and recent updates."
+          }
         </p>
       </div>
 
@@ -75,14 +80,18 @@ const Index = () => {
           {/* Statistics */}
           <div className="bg-card border border-border/50 rounded-lg p-6 relative">
             <div className="mb-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Statistics</h3>
-              <p className="text-xs text-muted-foreground">Key performance metrics</p>
+              <h3 className="text-sm font-medium text-muted-foreground">
+                {language === 'es' ? 'Estadísticas' : 'Statistics'}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {language === 'es' ? 'Métricas clave de rendimiento' : 'Key performance metrics'}
+              </p>
             </div>
             <Badge 
               variant="secondary" 
               className="absolute -top-1 -right-1 text-xs px-2 py-0 bg-muted text-muted-foreground"
             >
-              Coming Soon
+              {language === 'es' ? 'Próximamente' : 'Coming Soon'}
             </Badge>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -92,7 +101,9 @@ const Index = () => {
                 </div>
                 <div className="text-xs text-success">↗ 12.5%</div>
               </div>
-              <p className="text-xs text-muted-foreground">Total Users</p>
+              <p className="text-xs text-muted-foreground">
+                {language === 'es' ? 'Total de Usuarios' : 'Total Users'}
+              </p>
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -101,7 +112,9 @@ const Index = () => {
                 </div>
                 <div className="text-xs text-success">↗ 8.2%</div>
               </div>
-              <p className="text-xs text-muted-foreground">Revenue</p>
+              <p className="text-xs text-muted-foreground">
+                {language === 'es' ? 'Ingresos' : 'Revenue'}
+              </p>
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -110,7 +123,9 @@ const Index = () => {
                 </div>
                 <div className="text-xs text-red-500">↓ 2.1%</div>
               </div>
-              <p className="text-xs text-muted-foreground">Conversion Rate</p>
+              <p className="text-xs text-muted-foreground">
+                {language === 'es' ? 'Tasa de Conversión' : 'Conversion Rate'}
+              </p>
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -119,7 +134,9 @@ const Index = () => {
                 </div>
                 <div className="text-xs text-success">↗ 16.3%</div>
               </div>
-              <p className="text-xs text-muted-foreground">Active Sessions</p>
+              <p className="text-xs text-muted-foreground">
+                {language === 'es' ? 'Sesiones Activas' : 'Active Sessions'}
+              </p>
             </div>
           </div>
           

@@ -3,28 +3,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ProjectWithClient } from "@/hooks/useProjects";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface ROICardProps {
   project?: ProjectWithClient | null;
 }
 
 const ROICard = ({ project }: ROICardProps) => {
+  const { language } = useTheme();
   if (!project) {
     return (
       <Card className="bg-card border-border/50">
         <CardHeader className="pb-4">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            ROI Visualizer
+            {language === 'es' ? 'Visualizador de ROI' : 'ROI Visualizer'}
           </CardTitle>
-          <p className="text-xs text-muted-foreground">Performance analytics and returns</p>
+          <p className="text-xs text-muted-foreground">
+            {language === 'es' ? 'Análisis de rendimiento y retornos' : 'Performance analytics and returns'}
+          </p>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="text-muted-foreground mb-2">📊</div>
               <p className="text-sm text-muted-foreground">
-                Select a project to view ROI data
+                {language === 'es' ? 'Selecciona un proyecto para ver los datos de ROI' : 'Select a project to view ROI data'}
               </p>
             </div>
           </div>
@@ -62,7 +66,7 @@ const ROICard = ({ project }: ROICardProps) => {
 
   const roiMetrics = [
     {
-      title: "Monthly Savings",
+      title: language === 'es' ? "Ahorros Mensuales" : "Monthly Savings",
       value: `$${monthlySavings.toLocaleString()}`,
       icon: <DollarSign className="h-4 w-4" />,
       bgColor: "bg-success/10",
@@ -70,7 +74,7 @@ const ROICard = ({ project }: ROICardProps) => {
       iconColor: "text-success"
     },
     {
-      title: "Annual Savings", 
+      title: language === 'es' ? "Ahorros Anuales" : "Annual Savings", 
       value: `$${annualSavings.toLocaleString()}`,
       icon: <TrendingUp className="h-4 w-4" />,
       bgColor: "bg-primary/10",
@@ -78,7 +82,7 @@ const ROICard = ({ project }: ROICardProps) => {
       iconColor: "text-primary"
     },
     {
-      title: "Annual ROI",
+      title: language === 'es' ? "ROI Anual" : "Annual ROI",
       value: `${annualROI.toFixed(0)}%`,
       icon: <Percent className="h-4 w-4" />,
       bgColor: "bg-purple-500/10",
@@ -86,8 +90,10 @@ const ROICard = ({ project }: ROICardProps) => {
       iconColor: "text-purple-400"
     },
     {
-      title: "Payback Period",
-      value: `${paybackMonths} month${paybackMonths !== 1 ? 's' : ''}`, 
+      title: language === 'es' ? "Período de Recuperación" : "Payback Period",
+      value: language === 'es' 
+        ? `${paybackMonths} mes${paybackMonths !== 1 ? 'es' : ''}`
+        : `${paybackMonths} month${paybackMonths !== 1 ? 's' : ''}`, 
       icon: <Calendar className="h-4 w-4" />,
       bgColor: "bg-orange-500/10",
       textColor: "text-orange-400",
@@ -101,16 +107,21 @@ const ROICard = ({ project }: ROICardProps) => {
         <CardHeader className="pb-4">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            ROI Visualizer
+            {language === 'es' ? 'Visualizador de ROI' : 'ROI Visualizer'}
           </CardTitle>
-          <p className="text-xs text-muted-foreground">Performance analytics and returns</p>
+          <p className="text-xs text-muted-foreground">
+            {language === 'es' ? 'Análisis de rendimiento y retornos' : 'Performance analytics and returns'}
+          </p>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="text-muted-foreground mb-2">📊</div>
               <p className="text-sm text-muted-foreground">
-                ROI data will be available once project is in production
+                {language === 'es' 
+                  ? 'Los datos de ROI estarán disponibles una vez que el proyecto esté en producción'
+                  : 'ROI data will be available once project is in production'
+                }
               </p>
             </div>
           </div>
@@ -125,16 +136,18 @@ const ROICard = ({ project }: ROICardProps) => {
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            ROI Visualizer
+            {language === 'es' ? 'Visualizador de ROI' : 'ROI Visualizer'}
           </CardTitle>
           {isFullyRecovered && (
             <Badge className="bg-success/20 text-success border-success/30">
               <Trophy className="h-3 w-3 mr-1" />
-              Investment Recovered
+              {language === 'es' ? 'Inversión Recuperada' : 'Investment Recovered'}
             </Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">Performance analytics and returns</p>
+        <p className="text-xs text-muted-foreground">
+          {language === 'es' ? 'Análisis de rendimiento y retornos' : 'Performance analytics and returns'}
+        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -161,7 +174,9 @@ const ROICard = ({ project }: ROICardProps) => {
           {/* Investment Recovery Progress */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-foreground">Investment Recovery</h4>
+              <h4 className="text-sm font-medium text-foreground">
+                {language === 'es' ? 'Recuperación de Inversión' : 'Investment Recovery'}
+              </h4>
               <span className="text-xs text-muted-foreground">
                 ${totalRecovered.toLocaleString()} / ${implementationCost.toLocaleString()}
               </span>
@@ -171,8 +186,13 @@ const ROICard = ({ project }: ROICardProps) => {
               className="h-2 bg-muted"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Day {daysSinceStart}</span>
-              <span>{recoveryPercentage.toFixed(1)}% recovered</span>
+              <span>{language === 'es' ? `Día ${daysSinceStart}` : `Day ${daysSinceStart}`}</span>
+              <span>
+                {language === 'es' 
+                  ? `${recoveryPercentage.toFixed(1)}% recuperado`
+                  : `${recoveryPercentage.toFixed(1)}% recovered`
+                }
+              </span>
             </div>
           </div>
 
@@ -182,10 +202,13 @@ const ROICard = ({ project }: ROICardProps) => {
               ${(annualSavings - implementationCost).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              Net Annual Benefit
+              {language === 'es' ? 'Beneficio Anual Neto' : 'Net Annual Benefit'}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Based on {roiConfig.employees} employees, {roiConfig.hoursSaved}h saved/week
+              {language === 'es' 
+                ? `Basado en ${roiConfig.employees} empleados, ${roiConfig.hoursSaved}h ahorradas/semana`
+                : `Based on ${roiConfig.employees} employees, ${roiConfig.hoursSaved}h saved/week`
+              }
             </p>
           </div>
         </div>
