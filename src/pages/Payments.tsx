@@ -7,10 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { usePayments } from "@/hooks/usePayments";
 import { useProjectOptional } from "@/contexts/ProjectContext";
 import { useMemo } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Payments = () => {
   const { payments, loading } = usePayments();
   const projectContext = useProjectOptional();
+  const { language } = useTheme();
   
   // Filter payments by selected project for clients
   const filteredPayments = useMemo(() => {
@@ -19,14 +21,14 @@ const Payments = () => {
   }, [payments, projectContext?.selectedProject]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(language === 'es' ? 'es-ES' : 'en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(language === 'es' ? 'es-ES' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -58,13 +60,13 @@ const Payments = () => {
               <Link to="/">
                 <Button variant="ghost" size="sm" className="gap-2">
                   <ArrowLeft className="h-4 w-4" />
-                  Back to Dashboard
+                  {language === 'es' ? 'Volver al Panel' : 'Back to Dashboard'}
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Payment History</h1>
+                <h1 className="text-2xl font-bold text-foreground">{language === 'es' ? 'Historial de Pagos' : 'Payment History'}</h1>
                 <p className="text-sm text-muted-foreground">
-                  View and manage your payment history
+                  {language === 'es' ? 'Ver y administrar tu historial de pagos' : 'View and manage your payment history'}
                 </p>
               </div>
             </div>
@@ -72,11 +74,11 @@ const Payments = () => {
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" className="gap-2">
                 <Filter className="h-4 w-4" />
-                Filter
+                {language === 'es' ? 'Filtrar' : 'Filter'}
               </Button>
               <Button variant="outline" size="sm" className="gap-2">
                 <Download className="h-4 w-4" />
-                Export
+                {language === 'es' ? 'Exportar' : 'Export'}
               </Button>
             </div>
           </div>
@@ -88,31 +90,31 @@ const Payments = () => {
         <div className="hidden md:block">
           <Card className="border-border/50 shadow-card bg-gradient-card">
             <CardHeader>
-              <CardTitle>All Payments</CardTitle>
+              <CardTitle>{language === 'es' ? 'Todos los Pagos' : 'All Payments'}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Invoice</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Paid Date</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead>{language === 'es' ? 'Factura' : 'Invoice'}</TableHead>
+                    <TableHead>{language === 'es' ? 'Monto' : 'Amount'}</TableHead>
+                    <TableHead>{language === 'es' ? 'Vencimiento' : 'Due Date'}</TableHead>
+                    <TableHead>{language === 'es' ? 'Estado' : 'Status'}</TableHead>
+                    <TableHead>{language === 'es' ? 'Fecha de Pago' : 'Paid Date'}</TableHead>
+                    <TableHead className="w-[100px]">{language === 'es' ? 'Acciones' : 'Actions'}</TableHead>
                   </TableRow>
                 </TableHeader>
                  <TableBody>
                    {loading ? (
                      <TableRow>
                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                         Loading payments...
+                         {language === 'es' ? 'Cargando pagos...' : 'Loading payments...'}
                        </TableCell>
                      </TableRow>
                    ) : filteredPayments.length === 0 ? (
                      <TableRow>
                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                         No payments found for this project
+                         {language === 'es' ? 'No se encontraron pagos para este proyecto' : 'No payments found for this project'}
                        </TableCell>
                      </TableRow>
                    ) : (
@@ -134,7 +136,7 @@ const Payments = () => {
                            {payment.payment_date ? formatDate(payment.payment_date) : '—'}
                          </TableCell>
                          <TableCell>
-                           <Button variant="ghost" size="sm" className="gap-2">
+                           <Button variant="ghost" size="sm" className="gap-2" aria-label={language === 'es' ? 'Descargar factura' : 'Download invoice'}>
                              <Download className="h-4 w-4" />
                            </Button>
                          </TableCell>
@@ -152,13 +154,13 @@ const Payments = () => {
            {loading ? (
              <Card className="border-border/50 shadow-card bg-gradient-card">
                <CardContent className="p-8 text-center text-muted-foreground">
-                 Loading payments...
+                 {language === 'es' ? 'Cargando pagos...' : 'Loading payments...'}
                </CardContent>
              </Card>
            ) : filteredPayments.length === 0 ? (
              <Card className="border-border/50 shadow-card bg-gradient-card">
                <CardContent className="p-8 text-center text-muted-foreground">
-                 No payments found for this project
+                 {language === 'es' ? 'No se encontraron pagos para este proyecto' : 'No payments found for this project'}
                </CardContent>
              </Card>
            ) : (
@@ -174,18 +176,18 @@ const Payments = () => {
                    
                    <div className="space-y-2">
                      <div className="flex justify-between">
-                       <span className="text-muted-foreground">Amount:</span>
+                       <span className="text-muted-foreground">{language === 'es' ? 'Monto:' : 'Amount:'}</span>
                        <span className="font-semibold">{formatCurrency(Number(payment.amount))}</span>
                      </div>
                      
                      <div className="flex justify-between">
-                       <span className="text-muted-foreground">Due Date:</span>
+                       <span className="text-muted-foreground">{language === 'es' ? 'Vencimiento:' : 'Due Date:'}</span>
                        <span>{formatDate(payment.due_date)}</span>
                      </div>
                      
                      {payment.payment_date && (
                        <div className="flex justify-between">
-                         <span className="text-muted-foreground">Paid Date:</span>
+                         <span className="text-muted-foreground">{language === 'es' ? 'Fecha de Pago:' : 'Paid Date:'}</span>
                          <span>{formatDate(payment.payment_date)}</span>
                        </div>
                      )}
@@ -194,7 +196,7 @@ const Payments = () => {
                    <div className="mt-4 pt-4 border-t border-border/50">
                      <Button variant="outline" size="sm" className="w-full gap-2">
                        <Download className="h-4 w-4" />
-                       Download Invoice
+                       {language === 'es' ? 'Descargar Factura' : 'Download Invoice'}
                      </Button>
                    </div>
                  </CardContent>
@@ -210,7 +212,7 @@ const Payments = () => {
                <div className="text-2xl font-bold text-foreground">
                  {formatCurrency(filteredPayments.filter(p => p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0))}
                </div>
-               <p className="text-sm text-muted-foreground">Total Paid</p>
+               <p className="text-sm text-muted-foreground">{language === 'es' ? 'Total Pagado' : 'Total Paid'}</p>
              </CardContent>
            </Card>
 
@@ -219,7 +221,7 @@ const Payments = () => {
                <div className="text-2xl font-bold text-foreground">
                  {formatCurrency(filteredPayments.filter(p => p.status === 'pending').reduce((sum, p) => sum + Number(p.amount), 0))}
                </div>
-               <p className="text-sm text-muted-foreground">Outstanding</p>
+               <p className="text-sm text-muted-foreground">{language === 'es' ? 'Pendiente' : 'Outstanding'}</p>
              </CardContent>
            </Card>
 
@@ -228,7 +230,7 @@ const Payments = () => {
                <div className="text-2xl font-bold text-foreground">
                  {filteredPayments.length}
                </div>
-               <p className="text-sm text-muted-foreground">Total Invoices</p>
+               <p className="text-sm text-muted-foreground">{language === 'es' ? 'Facturas Totales' : 'Total Invoices'}</p>
              </CardContent>
            </Card>
         </div>
