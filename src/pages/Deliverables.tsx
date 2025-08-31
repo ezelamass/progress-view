@@ -88,29 +88,7 @@ const Deliverables = () => {
         </p>
       </div>
 
-      {/* Project Info Card */}
-      {selectedProject && (
-        <Card className="mb-6 bg-gradient-card border-border/50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">
-                  {selectedProject.name}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedProject.description || "No description available"}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-muted-foreground mb-1">Progress</div>
-                <div className="text-2xl font-bold text-primary">
-                  {selectedProject.progress_percentage}%
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Project Info Card removed by request */}
 
       {/* Deliverables Grid */}
       {loading ? (
