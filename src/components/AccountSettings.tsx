@@ -137,14 +137,15 @@ const AccountSettings = ({ open, onOpenChange }: AccountSettingsProps) => {
               {language === 'es' ? 'Tutorial de la Plataforma' : 'Platform Tutorial'}
             </DialogTitle>
           </DialogHeader>
-          <div className="aspect-video">
-            {/* Video Tutorial Loom */}
+          {/* Responsive embed wrapper provided by user */}
+          <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
             <iframe
-              src="https://www.loom.com/embed/fa5dc15b0c4c4c549d110c3b23bbd6c2"
+              src="https://www.loom.com/embed/617ec3899a1c496b946612fbdcfe4658?sid=60f6a3b3-62b5-43f7-98df-18b200aa96cb"
               frameBorder="0"
               allowFullScreen
-              className="w-full h-full rounded-lg"
-            ></iframe>
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              className="rounded-lg"
+            />
           </div>
         </DialogContent>
       </Dialog>
