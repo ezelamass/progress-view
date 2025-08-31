@@ -36,15 +36,24 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Client Hub
-          </CardTitle>
-          <CardDescription className="text-center">
-            Sign in to access your dashboard
-          </CardDescription>
-        </CardHeader>
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          {/* AdvantX Logo */}
+          <img 
+            src="/lovable-uploads/f5a1c6d4-589f-48e3-a940-1b6a804ad538.png" 
+            alt="AdvantX Logo" 
+            className="h-16 w-auto mx-auto mb-6"
+          />
+        </div>
+        <Card className="w-full shadow-lg border-0 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="space-y-1 pb-6">
+            <CardTitle className="text-2xl font-bold text-center bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              AdvantX Client Hub
+            </CardTitle>
+            <CardDescription className="text-center text-muted-foreground">
+              Sign in to access your dashboard
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -108,7 +117,8 @@ const Auth = () => {
             </Button>
           </form>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

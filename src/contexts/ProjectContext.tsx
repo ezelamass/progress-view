@@ -14,7 +14,7 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, profile, loading: authLoading } = useAuth();
-  const { projects, loading: projectsLoading, refetch } = useProjects();
+  const { projects, loading: projectsLoading, refetch } = useProjects(user);
   const [selectedProject, setSelectedProjectState] = useState<ProjectWithClient | null>(null);
 
   // Auto-select first project for clients, or use stored selection

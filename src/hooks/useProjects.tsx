@@ -14,7 +14,7 @@ export interface ProjectWithClient extends Project {
   };
 }
 
-export const useProjects = () => {
+export const useProjects = (user?: any) => {
   const [projects, setProjects] = useState<ProjectWithClient[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -23,9 +23,9 @@ export const useProjects = () => {
     try {
       setLoading(true);
       
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      // Use provided user or get current user
+      const currentUser = user || (await supabase.auth.getUser()).data.user;
+      if (!currentUser) {
         setProjects([]);
         return;
       }
@@ -34,7 +34,7 @@ export const useProjects = () => {
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
-        .eq('user_id', user.id)
+        .eq('user_id', currentUser.id)
         .single();
 
        let query = supabase
@@ -66,9 +66,9 @@ export const useProjects = () => {
               logo_url
             ),
             user_project_assignments!inner(user_id)
-          `)
-          .eq('user_project_assignments.user_id', user.id)
-          .order('created_at', { ascending: false });
+           `)
+           .eq('user_project_assignments.user_id', currentUser.id)
+           .order('created_at', { ascending: false });
 
         if (error) throw error;
         setProjects(data || []);
@@ -92,7 +92,7 @@ export const useProjects = () => {
 
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [user]);
 
   return {
     projects,
