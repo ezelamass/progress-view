@@ -22,7 +22,7 @@ const Help = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "¡Hola! Soy tu asistente de IA. ¿Cómo puedo ayudarte con tu proyecto hoy?",
+      content: "Hola, espero que estés teniendo un buen día! Soy el asistente de IA de AdvantX. Cómo puedo ayudarte hoy?",
       sender: "ai",
       timestamp: new Date(),
     },
@@ -216,9 +216,9 @@ const Help = () => {
         {/* Quick Actions */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-card rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer">
-              <h3 className="font-medium text-foreground mb-2">Estado del Proyecto</h3>
+              <h3 className="font-medium text-foreground mb-2">Dinámica de proyectos</h3>
               <p className="text-sm text-muted-foreground">
-                Obtén actualizaciones sobre el progreso de tu proyecto actual
+                Conoce nuestro proceso de gestión de proyectos y etapas
               </p>
             </div>
             <div className="bg-card rounded-lg border p-4 hover:bg-muted/50 transition-colors cursor-pointer">

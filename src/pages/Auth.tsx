@@ -40,9 +40,9 @@ const Auth = () => {
         <div className="text-center">
           {/* AdvantX Logo */}
           <img 
-            src="/lovable-uploads/f5a1c6d4-589f-48e3-a940-1b6a804ad538.png" 
+            src="/logo.png" 
             alt="AdvantX Logo" 
-            className="h-16 w-auto mx-auto mb-6"
+            className="h-32 w-auto mx-auto mb-6"
           />
         </div>
         <Card className="w-full shadow-lg border-0 bg-card/50 backdrop-blur-sm">
