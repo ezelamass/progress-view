@@ -109,7 +109,7 @@ const DashboardHeader = () => {
                 </span>
               </div>
             )}
-            <div>
+            <div className="hidden md:block">
               <h1 className="text-lg font-semibold text-foreground">
                 {selectedProject?.clients?.company || selectedProject?.clients?.name || 'Client Portal'}
               </h1>
@@ -122,6 +122,19 @@ const DashboardHeader = () => {
           {/* Navigation */}
           <div className="hidden md:flex">
             <ExpandableTabs tabs={tabs} selectedIndex={getSelectedIndex()} onChange={handleTabChange} className="border-border/50" />
+          </div>
+
+          {/* Mobile nav - icons only */}
+          <div className="flex md:hidden items-center space-x-2">
+            <Button variant="ghost" onClick={() => handleTabChange(0)} aria-label="Dashboard" className={`p-2 ${getSelectedIndex() === 0 ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Home className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" onClick={() => handleTabChange(1)} aria-label="Calendar" className={`p-2 ${getSelectedIndex() === 1 ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Calendar className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" onClick={() => handleTabChange(2)} aria-label="Help" className={`p-2 ${getSelectedIndex() === 2 ? 'text-primary' : 'text-muted-foreground'}`}>
+              <HelpCircle className="h-5 w-5" />
+            </Button>
           </div>
 
           {/* User Profile and Actions */}

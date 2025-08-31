@@ -63,9 +63,15 @@ const Index = () => {
           {/* Project Progress */}
           <ProjectProgress project={selectedProject} />
           
-          {/* ROI Card for test environment - moved here */}
-          {selectedProject?.environment !== 'production' && (
-            <ROICard project={selectedProject} />
+          {/* ROI Card for non-production environments. For 'test' hide on mobile (we'll render it below MeetingHistory). */}
+          {selectedProject?.environment === 'test' ? (
+            <div className="hidden sm:block">
+              <ROICard project={selectedProject} />
+            </div>
+          ) : (
+            selectedProject?.environment !== 'production' && (
+              <ROICard project={selectedProject} />
+            )
           )}
         </div>
 
@@ -76,6 +82,13 @@ const Index = () => {
           
           {/* Meeting History */}
           <MeetingHistory />
+
+          {/* For test environment only, show ROI below Meeting History on mobile */}
+          {selectedProject?.environment === 'test' && (
+            <div className="block sm:hidden">
+              <ROICard project={selectedProject} />
+            </div>
+          )}
           
           {/* Statistics */}
           <div className="bg-card border border-border/50 rounded-lg p-6 relative">
