@@ -271,13 +271,14 @@ const Calendar = () => {
                     )}
                     
                     {/* Deliverables */}
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-col gap-1">
                       {dayDeliverables.map(deliverable => (
                         <div
                           key={deliverable.id}
                           className={`
-                            relative flex items-center justify-center w-4 h-4 rounded-full border-2 cursor-pointer hover:scale-110 transition-transform
-                            ${getDeliverableStatusColor(deliverable.status)}
+                            relative inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-transform
+                            truncate max-w-full
+                            ${deliverable.status === 'completed' ? 'bg-green-600 text-white' : deliverable.status === 'overdue' ? 'bg-red-600 text-white' : deliverable.status === 'in_progress' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'}
                           `}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -285,11 +286,14 @@ const Calendar = () => {
                           }}
                           title={`${deliverable.name} - ${deliverable.status}`}
                         >
-                          {deliverable.status === 'completed' && (
-                            <CheckCircle className="w-2.5 h-2.5 text-white" />
+                          {deliverable.status === 'completed' ? (
+                            <CheckCircle className="w-3 h-3 text-white" />
+                          ) : (
+                            <Clock className="w-3 h-3 text-white" />
                           )}
+                          <span className="truncate max-w-[120px]">{deliverable.name}</span>
                           {deliverable.priority === 'high' && (
-                            <Flag className={`absolute -top-1 -right-1 w-2 h-2 ${getPriorityColor(deliverable.priority)}`} />
+                            <Flag className={`ml-1 w-3 h-3 ${getPriorityColor(deliverable.priority)}`} />
                           )}
                         </div>
                       ))}
@@ -325,8 +329,17 @@ const Calendar = () => {
                         {phase.startDate.toLocaleDateString()} - {phase.endDate.toLocaleDateString()}
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {phase.progress}%
+                    <Badge
+                      variant="outline"
+                      className={`text-xs capitalize ${
+                        phase.status === 'completed'
+                          ? 'bg-success/20 text-success border-success/30'
+                          : phase.status === 'in_progress'
+                          ? 'bg-primary/20 text-primary border-primary/30'
+                          : 'bg-muted/50 text-muted-foreground border-border'
+                      }`}
+                    >
+                      {phase.status.replace('_', ' ')}
                     </Badge>
                   </div>
                 ))}
@@ -413,18 +426,7 @@ const Calendar = () => {
                     <p className="text-sm">{selectedPhase.endDate.toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm mb-1">Progress</h4>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-muted rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${selectedPhase.color}`}
-                        style={{ width: `${selectedPhase.progress}%` }}
-                      />
-                    </div>
-                    <span className="text-sm">{selectedPhase.progress}%</span>
-                  </div>
-                </div>
+                {/* Progress bar removed per request - status badge used instead */}
                 <div>
                   <h4 className="font-medium text-sm mb-2">Phase Deliverables</h4>
                   <div className="space-y-2">
