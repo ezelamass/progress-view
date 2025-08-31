@@ -10,6 +10,7 @@ export interface ProjectWithClient extends Project {
     id: string;
     company: string;
     name: string;
+    logo_url?: string;
   };
 }
 
@@ -36,14 +37,15 @@ export const useProjects = () => {
         .eq('user_id', user.id)
         .single();
 
-      let query = supabase
+       let query = supabase
         .from('projects')
         .select(`
           *,
           clients:client_id (
             id,
             company,
-            name
+            name,
+            logo_url
           )
         `);
 
@@ -60,7 +62,8 @@ export const useProjects = () => {
             clients:client_id (
               id,
               company,
-              name
+              name,
+              logo_url
             ),
             user_project_assignments!inner(user_id)
           `)

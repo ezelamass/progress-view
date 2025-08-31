@@ -61,6 +61,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProjectAssignments } from "@/components/admin/UserProjectAssignments";
+import { LogoUpload } from "@/components/LogoUpload";
 
 interface Client {
   id: string;
@@ -620,28 +621,10 @@ function ClientForm({ formData, setFormData, errors }: ClientFormProps) {
         />
       </div>
       
-      <div className="grid gap-2">
-        <Label htmlFor="logoUrl">Logo URL</Label>
-        <Input
-          id="logoUrl"
-          value={formData.logoUrl}
-          onChange={(e) => setFormData(prev => ({ ...prev, logoUrl: e.target.value }))}
-          placeholder="https://example.com/logo.png"
-        />
-        {formData.logoUrl && (
-          <div className="mt-2">
-            <img 
-              src={formData.logoUrl} 
-              alt="Logo preview" 
-              className="h-12 w-12 object-cover rounded border"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-              }}
-            />
-          </div>
-        )}
-      </div>
+      <LogoUpload
+        currentLogoUrl={formData.logoUrl}
+        onLogoChange={(logoUrl) => setFormData(prev => ({ ...prev, logoUrl }))}
+      />
       
       <div className="flex items-center space-x-2">
         <Switch

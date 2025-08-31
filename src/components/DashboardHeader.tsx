@@ -86,11 +86,29 @@ const DashboardHeader = () => {
         <div className="flex items-center justify-between">
           {/* Company Logo and Name */}
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <span className="text-sm font-bold text-primary-foreground">
-                {selectedProject?.clients?.company?.substring(0, 2) || selectedProject?.clients?.name?.substring(0, 2) || 'CP'}
-              </span>
-            </div>
+            {selectedProject?.clients?.logo_url ? (
+              <div className="h-8 w-8 rounded-lg overflow-hidden border border-border/50">
+                <img 
+                  src={selectedProject.clients.logo_url} 
+                  alt={selectedProject.clients.company || 'Company logo'} 
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    // Fallback to initials if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<div class="h-8 w-8 bg-gradient-primary rounded-lg flex items-center justify-center"><span class="text-sm font-bold text-primary-foreground">${selectedProject?.clients?.company?.substring(0, 2) || selectedProject?.clients?.name?.substring(0, 2) || 'CP'}</span></div>`;
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="h-8 w-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                <span className="text-sm font-bold text-primary-foreground">
+                  {selectedProject?.clients?.company?.substring(0, 2) || selectedProject?.clients?.name?.substring(0, 2) || 'CP'}
+                </span>
+              </div>
+            )}
             <div>
               <h1 className="text-lg font-semibold text-foreground">
                 {selectedProject?.clients?.company || selectedProject?.clients?.name || 'Client Portal'}
