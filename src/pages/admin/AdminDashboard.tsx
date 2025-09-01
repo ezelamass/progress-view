@@ -54,108 +54,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import QuickActionsWidget from "@/components/admin/widgets/QuickActionsWidget";
+import { useAdminMetrics } from "@/hooks/useAdminMetrics";
+import { useAdminCharts } from "@/hooks/useAdminCharts";
+import { useAdminAlerts } from "@/hooks/useAdminAlerts";
+import { useActivities } from "@/hooks/useActivities";
 
-// Mock data for charts and metrics
-const revenueData = [
-  { month: 'Jan', revenue: 32000, target: 30000 },
-  { month: 'Feb', revenue: 28000, target: 32000 },
-  { month: 'Mar', revenue: 35000, target: 33000 },
-  { month: 'Apr', revenue: 42000, target: 35000 },
-  { month: 'May', revenue: 38000, target: 38000 },
-  { month: 'Jun', revenue: 45000, target: 40000 },
-  { month: 'Jul', revenue: 48000, target: 42000 },
-  { month: 'Aug', revenue: 52000, target: 45000 },
-  { month: 'Sep', revenue: 47000, target: 48000 },
-  { month: 'Oct', revenue: 55000, target: 50000 },
-  { month: 'Nov', revenue: 58000, target: 52000 },
-  { month: 'Dec', revenue: 62000, target: 55000 }
-];
-
-const paymentStatusData = [
-  { name: 'Paid', value: 67, amount: 185000, color: 'hsl(var(--success))' },
-  { name: 'Pending', value: 20, amount: 54000, color: 'hsl(var(--warning))' },
-  { name: 'Overdue', value: 10, amount: 28000, color: 'hsl(var(--destructive))' },
-  { name: 'Cancelled', value: 3, amount: 8000, color: 'hsl(var(--muted-foreground))' }
-];
-
-const projectProfitabilityData = [
-  { project: 'E-commerce Platform', revenue: 85000, costs: 45000, profit: 40000 },
-  { project: 'Mobile App', revenue: 65000, costs: 38000, profit: 27000 },
-  { project: 'Website Redesign', revenue: 42000, costs: 28000, profit: 14000 },
-  { project: 'CRM Integration', revenue: 38000, costs: 25000, profit: 13000 },
-  { project: 'API Development', revenue: 32000, costs: 22000, profit: 10000 }
-];
-
-const clientGrowthData = [
-  { month: 'Jan', clients: 18 },
-  { month: 'Feb', clients: 19 },
-  { month: 'Mar', clients: 20 },
-  { month: 'Apr', clients: 22 },
-  { month: 'May', clients: 21 },
-  { month: 'Jun', clients: 24 }
-];
-
-const recentActivity = [
-  {
-    id: 1,
-    type: 'client',
-    message: 'New client "TechStart Solutions" onboarded',
-    time: '2 hours ago',
-    status: 'success'
-  },
-  {
-    id: 2,
-    type: 'project',
-    message: 'E-commerce Platform project completed',
-    time: '4 hours ago',
-    status: 'success'
-  },
-  {
-    id: 3,
-    type: 'payment',
-    message: 'Payment of $15,000 received from Digital Dynamics',
-    time: '6 hours ago',
-    status: 'success'
-  },
-  {
-    id: 4,
-    type: 'project',
-    message: 'Mobile App project milestone reached',
-    time: '1 day ago',
-    status: 'info'
-  },
-  {
-    id: 5,
-    type: 'alert',
-    message: 'Website Redesign project approaching deadline',
-    time: '1 day ago',
-    status: 'warning'
-  }
-];
-
-const alerts = [
-  {
-    id: 1,
-    type: 'payment',
-    message: '3 payments overdue - $28,000 total',
-    priority: 'high',
-    action: 'View Payments'
-  },
-  {
-    id: 2,
-    type: 'project',
-    message: '2 projects due within 3 days',
-    priority: 'medium',
-    action: 'View Projects'
-  },
-  {
-    id: 3,
-    type: 'client',
-    message: '5 clients haven\'t been contacted in 30+ days',
-    priority: 'low',
-    action: 'View Clients'
-  }
-];
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -214,6 +117,10 @@ const MetricCard = ({
 
 export default function AdminDashboard() {
   const { toast } = useToast();
+  const { metrics, loading: metricsLoading } = useAdminMetrics();
+  const { chartData, loading: chartsLoading } = useAdminCharts();
+  const { alerts, loading: alertsLoading } = useAdminAlerts();
+  const { activities, loading: activitiesLoading } = useActivities(undefined, 5);
   
   return (
     <div className="space-y-6">
@@ -232,7 +139,7 @@ export default function AdminDashboard() {
         <Link to="/admin/clients">
           <MetricCard
             title="Total Clients"
-            value="24"
+            value={metricsLoading ? "..." : metrics.totalClients.toString()}
             change="+12% this month"
             trend="up"
             icon={Users}
@@ -241,7 +148,7 @@ export default function AdminDashboard() {
           >
             <div className="mt-3">
               <ResponsiveContainer width="100%" height={40}>
-                <AreaChart data={clientGrowthData}>
+                <AreaChart data={metrics.clientGrowthData}>
                   <Area 
                     type="monotone" 
                     dataKey="clients" 
@@ -258,54 +165,58 @@ export default function AdminDashboard() {
         <Link to="/admin/projects">
           <MetricCard
             title="Active Projects"
-            value="18"
+            value={metricsLoading ? "..." : metrics.activeProjects.toString()}
             change="+5 this quarter"
             trend="up"
             icon={FolderKanban}
             color="text-green-500"
-            subtitle="73% avg completion"
+            subtitle={`${metrics.avgProjectProgress}% avg completion`}
           >
             <div className="mt-3 space-y-2">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Progress</span>
-                <span>73%</span>
+                <span>{metrics.avgProjectProgress}%</span>
               </div>
-              <Progress value={73} className="h-2" />
+              <Progress value={metrics.avgProjectProgress} className="h-2" />
             </div>
           </MetricCard>
         </Link>
 
         <MetricCard
           title="Monthly Revenue"
-          value={formatCurrency(62000)}
+          value={metricsLoading ? "..." : formatCurrency(metrics.monthlyRevenue)}
           change="+18.5% vs last month"
           trend="up"
           icon={DollarSign}
           color="text-emerald-500"
-          subtitle="Target: $55,000"
+          subtitle={`Current month revenue`}
         >
           <div className="mt-3 space-y-2">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Target Achievement</span>
-              <span>112%</span>
+              <span className="text-muted-foreground">This Month</span>
+              <span>{formatCurrency(metrics.monthlyRevenue)}</span>
             </div>
-            <Progress value={112} className="h-2" />
+            <Progress value={Math.min((metrics.monthlyRevenue / 50000) * 100, 100)} className="h-2" />
           </div>
         </MetricCard>
 
         <Link to="/admin/payments">
           <MetricCard
             title="Outstanding Payments"
-            value={formatCurrency(28000)}
-            change="3 overdue"
+            value={metricsLoading ? "..." : formatCurrency(metrics.outstandingPayments)}
+            change={`${metrics.overduePaymentsCount} overdue`}
             trend="down"
             icon={AlertTriangle}
             color="text-red-500"
-            subtitle="Avg 12 days overdue"
+            subtitle="Pending + overdue"
           >
             <div className="mt-3 flex items-center space-x-2">
-              <Badge variant="destructive" className="text-xs">Urgent</Badge>
-              <span className="text-xs text-muted-foreground">Requires attention</span>
+              {metrics.overduePaymentsCount > 0 && (
+                <Badge variant="destructive" className="text-xs">Urgent</Badge>
+              )}
+              <span className="text-xs text-muted-foreground">
+                {metrics.overduePaymentsCount > 0 ? "Requires attention" : "All up to date"}
+              </span>
             </div>
           </MetricCard>
         </Link>
@@ -432,7 +343,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
+              <LineChart data={chartsLoading ? [] : chartData.revenueData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
                 <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `$${value/1000}k`} />
@@ -475,14 +386,14 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={paymentStatusData}
+                  data={chartsLoading ? [] : chartData.paymentStatusData}
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
                   dataKey="value"
                   label={(entry) => `${entry.name}: ${entry.value}%`}
                 >
-                  {paymentStatusData.map((entry, index) => (
+                  {(chartsLoading ? [] : chartData.paymentStatusData).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -499,22 +410,24 @@ export default function AdminDashboard() {
                 />
               </PieChart>
             </ResponsiveContainer>
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              {paymentStatusData.map((item) => (
-                <div key={item.name} className="flex items-center space-x-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <div className="text-sm">
-                    <span className="font-medium">{item.name}</span>
-                    <span className="text-muted-foreground ml-1">
-                      {formatCurrency(item.amount)}
-                    </span>
+            {!chartsLoading && chartData.paymentStatusData.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {chartData.paymentStatusData.map((item) => (
+                  <div key={item.name} className="flex items-center space-x-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <div className="text-sm">
+                      <span className="font-medium">{item.name}</span>
+                      <span className="text-muted-foreground ml-1">
+                        {formatCurrency(item.amount)}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -529,7 +442,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={projectProfitabilityData} layout="horizontal">
+              <BarChart data={chartsLoading ? [] : chartData.projectProfitabilityData} layout="horizontal">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis type="number" stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `$${value/1000}k`} />
                 <YAxis type="category" dataKey="project" stroke="hsl(var(--muted-foreground))" width={120} />
@@ -555,23 +468,31 @@ export default function AdminDashboard() {
             <CardDescription>Latest updates and events</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-start space-x-3">
-                <div 
-                  className={`h-2 w-2 rounded-full mt-2 ${
-                    activity.status === 'success' 
-                      ? 'bg-success' 
-                      : activity.status === 'warning'
-                      ? 'bg-warning'
-                      : 'bg-primary'
-                  }`} 
-                />
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium text-foreground">{activity.message}</p>
-                  <p className="text-xs text-muted-foreground">{activity.time}</p>
+            {activitiesLoading ? (
+              <div className="space-y-3">
+                <div className="animate-pulse flex space-x-3">
+                  <div className="h-2 w-2 bg-muted rounded-full mt-2"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                  </div>
                 </div>
               </div>
-            ))}
+            ) : activities.length > 0 ? (
+              activities.map((activity) => (
+                <div key={activity.id} className="flex items-start space-x-3">
+                  <div className="h-2 w-2 rounded-full mt-2 bg-primary" />
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium text-foreground">{activity.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(activity.created_at), 'MMM d, h:mm a')}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No recent activity</p>
+            )}
             <Button variant="outline" size="sm" className="w-full mt-4">
               <Eye className="h-4 w-4 mr-2" />
               View All Activity
@@ -592,41 +513,52 @@ export default function AdminDashboard() {
             <CardDescription>Items requiring your attention</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {alerts.map((alert) => (
-              <div 
-                key={alert.id} 
-                className={`p-4 rounded-lg border-l-4 ${
-                  alert.priority === 'high' 
-                    ? 'border-l-destructive bg-destructive/5' 
-                    : alert.priority === 'medium'
-                    ? 'border-l-warning bg-warning/5'
-                    : 'border-l-primary bg-primary/5'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">{alert.message}</p>
-                    <div className="flex items-center mt-2 space-x-2">
-                      <Badge 
-                        variant={
-                          alert.priority === 'high' 
-                            ? 'destructive' 
-                            : alert.priority === 'medium'
-                            ? 'secondary'
-                            : 'outline'
-                        }
-                        className="text-xs"
-                      >
-                        {alert.priority}
-                      </Badge>
-                      <Button variant="ghost" size="sm" className="text-xs h-6 px-2">
-                        {alert.action}
-                      </Button>
+            {alertsLoading ? (
+              <div className="space-y-3">
+                <div className="animate-pulse p-4 rounded-lg border-l-4 border-l-muted bg-muted/5">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </div>
+              </div>
+            ) : alerts.length > 0 ? (
+              alerts.map((alert) => (
+                <div 
+                  key={alert.id} 
+                  className={`p-4 rounded-lg border-l-4 ${
+                    alert.priority === 'high' 
+                      ? 'border-l-destructive bg-destructive/5' 
+                      : alert.priority === 'medium'
+                      ? 'border-l-warning bg-warning/5'
+                      : 'border-l-primary bg-primary/5'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">{alert.message}</p>
+                      <div className="flex items-center mt-2 space-x-2">
+                        <Badge 
+                          variant={
+                            alert.priority === 'high' 
+                              ? 'destructive' 
+                              : alert.priority === 'medium'
+                              ? 'secondary'
+                              : 'outline'
+                          }
+                          className="text-xs"
+                        >
+                          {alert.priority}
+                        </Badge>
+                        <Button variant="ghost" size="sm" className="text-xs h-6 px-2">
+                          {alert.action}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No alerts at this time</p>
+            )}
           </CardContent>
         </Card>
 
