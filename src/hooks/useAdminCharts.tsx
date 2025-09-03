@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChartData {
-  revenueData: Array<{ month: string; revenue: number; target: number }>;
+  revenueData: Array<{ month: string; revenue: number }>;
   paymentStatusData: Array<{ name: string; value: number; amount: number; color: string }>;
   projectProfitabilityData: Array<{ project: string; revenue: number; costs: number; profit: number }>;
 }
@@ -71,7 +71,7 @@ export const useAdminCharts = () => {
     const currentDate = new Date();
     const data = [];
 
-    for (let i = 11; i >= 0; i--) {
+    for (let i = 5; i >= 0; i--) {
       const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
       const monthName = months[targetDate.getMonth()];
       
@@ -84,14 +84,9 @@ export const useAdminCharts = () => {
         })
         .reduce((sum, payment) => sum + Number(payment.amount), 0);
 
-      // Generate a realistic target (10% above average)
-      const avgRevenue = monthlyRevenue > 0 ? monthlyRevenue : 30000;
-      const target = Math.round(avgRevenue * 1.1);
-
       data.push({ 
         month: monthName, 
-        revenue: monthlyRevenue, 
-        target 
+        revenue: monthlyRevenue
       });
     }
 

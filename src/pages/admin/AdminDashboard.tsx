@@ -344,29 +344,25 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="text-foreground">Revenue Trend</CardTitle>
-            <CardDescription>Monthly revenue vs targets (last 12 months)</CardDescription>
+            <CardDescription>Monthly revenue from paid invoices (last 6 months)</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartsLoading ? [] : chartData.revenueData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `$${value/1000}k`} />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tickFormatter={(value) => `$${value}`}
+                  domain={[300, 5000]}
+                />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))', 
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px'
                   }}
-                  formatter={(value: any) => [formatCurrency(value), '']}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="target" 
-                  stroke="hsl(var(--muted-foreground))" 
-                  strokeDasharray="5 5"
-                  strokeWidth={2}
-                  name="Target"
+                  formatter={(value: any) => [formatCurrency(value), 'Revenue']}
                 />
                 <Line 
                   type="monotone" 
@@ -374,7 +370,7 @@ export default function AdminDashboard() {
                   stroke="hsl(var(--primary))" 
                   strokeWidth={3}
                   name="Revenue"
-                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 6 }}
                 />
               </LineChart>
             </ResponsiveContainer>
