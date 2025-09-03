@@ -244,44 +244,49 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <div className="h-2 w-2 bg-primary rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-medium">Last worked with TechStart Solutions</p>
-                    <p className="text-xs text-muted-foreground">2 hours ago</p>
+              {activitiesLoading ? (
+                <div className="space-y-3">
+                  <div className="animate-pulse flex items-center justify-between p-3 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <div className="h-2 w-2 bg-muted rounded-full"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-muted rounded w-48"></div>
+                        <div className="h-3 bg-muted rounded w-24"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <Button size="sm" variant="ghost">
-                  Continue
-                </Button>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <div className="h-2 w-2 bg-success rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-medium">Payment recorded for Digital Dynamics</p>
-                    <p className="text-xs text-muted-foreground">4 hours ago</p>
+              ) : activities.length > 0 ? (
+                activities.slice(0, 3).map((activity) => (
+                  <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <div className="h-2 w-2 bg-primary rounded-full"></div>
+                      <div>
+                        <p className="text-sm font-medium">{activity.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(activity.created_at), 'MMM d, h:mm a')}
+                        </p>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="ghost">
+                      View
+                    </Button>
                   </div>
-                </div>
-                <Button size="sm" variant="ghost">
-                  View
-                </Button>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <div className="h-2 w-2 bg-warning rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-medium">AI Implementation project updated</p>
-                    <p className="text-xs text-muted-foreground">6 hours ago</p>
+                ))
+              ) : (
+                <div className="flex items-center justify-between p-3 rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 bg-muted rounded-full"></div>
+                    <div>
+                      <p className="text-sm font-medium">No recent actions</p>
+                      <p className="text-xs text-muted-foreground">Start by creating a project</p>
+                    </div>
                   </div>
+                  <Button size="sm" variant="ghost">
+                    Start
+                  </Button>
                 </div>
-                <Button size="sm" variant="ghost">
-                  Review
-                </Button>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -572,30 +577,38 @@ export default function AdminDashboard() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">On-time Delivery Rate</span>
-                <span className="text-sm font-bold text-success">94.2%</span>
+                <span className="text-sm font-bold text-success">
+                  {metricsLoading ? "..." : `${metrics.onTimeDeliveryRate}%`}
+                </span>
               </div>
-              <Progress value={94.2} className="h-2" />
+              <Progress value={metricsLoading ? 0 : metrics.onTimeDeliveryRate} className="h-2" />
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Client Retention Rate</span>
-                <span className="text-sm font-bold text-success">87.5%</span>
+                <span className="text-sm font-bold text-success">
+                  {metricsLoading ? "..." : `${metrics.clientRetentionRate}%`}
+                </span>
               </div>
-              <Progress value={87.5} className="h-2" />
+              <Progress value={metricsLoading ? 0 : metrics.clientRetentionRate} className="h-2" />
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Average Project Value</span>
-                <span className="text-sm font-bold">{formatCurrency(45600)}</span>
+                <span className="text-sm font-bold">
+                  {metricsLoading ? "..." : formatCurrency(metrics.avgProjectValue)}
+                </span>
               </div>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Projects This Quarter</span>
-                <span className="text-sm font-bold">23</span>
+                <span className="text-sm font-bold">
+                  {metricsLoading ? "..." : metrics.projectsThisQuarter.toString()}
+                </span>
               </div>
             </div>
 
@@ -605,21 +618,27 @@ export default function AdminDashboard() {
                   <CheckCircle className="h-4 w-4 text-success" />
                 </div>
                 <p className="text-xs text-muted-foreground">Completed</p>
-                <p className="text-sm font-bold">18</p>
+                <p className="text-sm font-bold">
+                  {metricsLoading ? "..." : metrics.projectStatusCounts.completed.toString()}
+                </p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center mb-1">
                   <Clock className="h-4 w-4 text-warning" />
                 </div>
                 <p className="text-xs text-muted-foreground">In Progress</p>
-                <p className="text-sm font-bold">4</p>
+                <p className="text-sm font-bold">
+                  {metricsLoading ? "..." : metrics.projectStatusCounts.inProgress.toString()}
+                </p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center mb-1">
                   <XCircle className="h-4 w-4 text-destructive" />
                 </div>
                 <p className="text-xs text-muted-foreground">Delayed</p>
-                <p className="text-sm font-bold">1</p>
+                <p className="text-sm font-bold">
+                  {metricsLoading ? "..." : metrics.projectStatusCounts.delayed.toString()}
+                </p>
               </div>
             </div>
           </CardContent>
