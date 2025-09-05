@@ -279,8 +279,52 @@ export default function ProjectFormDialog({
   const roiValues = form.watch("roiConfig");
   const roi = calculateROI(roiValues.employeeCount, roiValues.hoursPerEmployee, roiValues.costPerHour);
 
-  const handleStepNavigation = (direction: 'next' | 'prev') => {
+  const handleStepNavigation = (direction: 'next' | 'prev', e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (direction === 'next' && dialogStep < 2) {
+      // Validate step 1 fields before proceeding
+      const values = form.getValues();
+      
+      if (!values.name?.trim()) {
+        toast({
+          title: "Validation Error",
+          description: "Project name is required.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!values.clientId) {
+        toast({
+          title: "Validation Error", 
+          description: "Client selection is required.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!values.startDate) {
+        toast({
+          title: "Validation Error",
+          description: "Start date is required.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!values.endDate) {
+        toast({
+          title: "Validation Error",
+          description: "End date is required.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setDialogStep(dialogStep + 1);
     } else if (direction === 'prev' && dialogStep > 1) {
       setDialogStep(dialogStep - 1);
@@ -302,8 +346,14 @@ export default function ProjectFormDialog({
         <Form {...form}>
           <form onSubmit={(e) => {
             e.preventDefault();
+            // Only allow form submission on step 2
             if (dialogStep === 2) {
               form.handleSubmit(handleFormSubmit)(e);
+            }
+          }} onKeyDown={(e) => {
+            // Prevent Enter key from submitting form on step 1
+            if (e.key === 'Enter' && dialogStep === 1) {
+              e.preventDefault();
             }
           }}>
             {dialogStep === 1 && (
@@ -315,7 +365,15 @@ export default function ProjectFormDialog({
                     <FormItem>
                       <FormLabel>Project Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter project name" {...field} />
+                        <Input 
+                          placeholder="Enter project name" 
+                          {...field}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -369,7 +427,15 @@ export default function ProjectFormDialog({
                       <FormItem>
                         <FormLabel>Start Date</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <Input 
+                            type="date" 
+                            {...field}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -382,7 +448,15 @@ export default function ProjectFormDialog({
                       <FormItem>
                         <FormLabel>End Date</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <Input 
+                            type="date" 
+                            {...field}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -596,7 +670,7 @@ export default function ProjectFormDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleStepNavigation('prev')}
+                  onClick={(e) => handleStepNavigation('prev', e)}
                   disabled={dialogStep === 1 || loading}
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -606,7 +680,7 @@ export default function ProjectFormDialog({
                 {dialogStep < 2 ? (
                   <Button
                     type="button"
-                    onClick={() => handleStepNavigation('next')}
+                    onClick={(e) => handleStepNavigation('next', e)}
                   >
                     Next
                     <ArrowRight className="ml-2 h-4 w-4" />
