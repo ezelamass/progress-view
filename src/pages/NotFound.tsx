@@ -30,10 +30,10 @@ const NotFound = () => {
             Sorry, the page you're looking for doesn't exist or has been moved.
           </p>
           
-          <Link to="/">
+          <Link to="/auth">
             <Button className="gap-2">
               <Home className="h-4 w-4" />
-              Return to Dashboard
+              Return to Login
             </Button>
           </Link>
         </CardContent>
