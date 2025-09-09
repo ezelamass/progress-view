@@ -117,7 +117,11 @@ const Deliverables = () => {
             const isOverdue = new Date(deliverable.due_date) < new Date() && deliverable.status !== 'completed';
             
             return (
-              <Card key={deliverable.id} className="bg-card border-border/50 hover:shadow-lg transition-shadow">
+               <Card key={deliverable.id} className={`bg-card hover:shadow-lg transition-shadow ${
+                 deliverable.is_bonus 
+                   ? 'border-yellow-400 border-2 shadow-yellow-100/50' 
+                   : 'border-border/50'
+               }`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -136,21 +140,29 @@ const Deliverables = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Status and Priority */}
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      variant="outline"
-                      className={`text-xs ${getStatusColor(deliverable.status)}`}
-                    >
-                      {deliverable.status.replace('_', ' ')}
-                    </Badge>
-                    <Badge 
-                      variant="outline"
-                      className={`text-xs ${getPriorityColor(deliverable.priority)}`}
-                    >
-                      {deliverable.priority} priority
-                    </Badge>
-                  </div>
+                   {/* Status and Priority */}
+                   <div className="flex items-center gap-2 flex-wrap">
+                     {deliverable.is_bonus && (
+                       <Badge 
+                         variant="outline"
+                         className="text-xs bg-yellow-50 text-yellow-800 border-yellow-300 dark:bg-yellow-950 dark:text-yellow-200 dark:border-yellow-800"
+                       >
+                         ✨ Bonus
+                       </Badge>
+                     )}
+                     <Badge 
+                       variant="outline"
+                       className={`text-xs ${getStatusColor(deliverable.status)}`}
+                     >
+                       {deliverable.status.replace('_', ' ')}
+                     </Badge>
+                     <Badge 
+                       variant="outline"
+                       className={`text-xs ${getPriorityColor(deliverable.priority)}`}
+                     >
+                       {deliverable.priority} priority
+                     </Badge>
+                   </div>
 
                   {/* Due Date and File Management */}
                   <div className="flex items-center justify-between">

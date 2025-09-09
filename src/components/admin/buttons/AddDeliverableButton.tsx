@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Plus, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -25,6 +26,7 @@ const deliverableFormSchema = z.object({
   }),
   priority: z.enum(["low", "medium", "high"]),
   assignedTo: z.string().optional(),
+  is_bonus: z.boolean().default(false),
 });
 
 const mockProjects = [
@@ -49,16 +51,17 @@ export default function AddDeliverableButton({
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof deliverableFormSchema>>({
-    resolver: zodResolver(deliverableFormSchema),
-    defaultValues: {
-      projectId: "",
-      name: "",
-      description: "",
-      priority: "medium",
-      assignedTo: "",
-    },
-  });
+   const form = useForm<z.infer<typeof deliverableFormSchema>>({
+     resolver: zodResolver(deliverableFormSchema),
+     defaultValues: {
+       projectId: "",
+       name: "",
+       description: "",
+       priority: "medium",
+       assignedTo: "",
+       is_bonus: false,
+     },
+   });
 
   const onSubmit = (values: z.infer<typeof deliverableFormSchema>) => {
     const newDeliverable = {
@@ -215,6 +218,28 @@ export default function AddDeliverableButton({
                     </SelectContent>
                   </Select>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="is_bonus"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">
+                      Bonus Deliverable
+                    </FormLabel>
+                    <FormDescription>
+                      Mark this deliverable as a bonus/extra item
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

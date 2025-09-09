@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Switch } from "@/components/ui/switch";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -30,6 +31,7 @@ const deliverableFormSchema = z.object({
   }),
   priority: z.enum(["low", "medium", "high"]),
   loom_url: z.string().url().optional().or(z.literal("")),
+  is_bonus: z.boolean().default(false),
 });
 
 const getStatusIcon = (status: string) => {
@@ -81,16 +83,17 @@ export default function DeliverableManagement() {
   const { deliverables, loading, createDeliverable, updateDeliverable, deleteDeliverable, updateDeliverableStatus } = useDeliverables();
   const { projects, loading: projectsLoading } = useProjects();
 
-  const form = useForm<z.infer<typeof deliverableFormSchema>>({
-    resolver: zodResolver(deliverableFormSchema),
-    defaultValues: {
-      project_id: "",
-      name: "",
-      description: "",
-      priority: "medium",
-      loom_url: "",
-    },
-  });
+   const form = useForm<z.infer<typeof deliverableFormSchema>>({
+     resolver: zodResolver(deliverableFormSchema),
+     defaultValues: {
+       project_id: "",
+       name: "",
+       description: "",
+       priority: "medium",
+       loom_url: "",
+       is_bonus: false,
+     },
+   });
 
   const filteredDeliverables = deliverables.filter(deliverable => {
     const matchesSearch = deliverable.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,15 +114,16 @@ export default function DeliverableManagement() {
 
   const onSubmit = async (values: z.infer<typeof deliverableFormSchema>) => {
     try {
-      const deliverableData = {
-        project_id: values.project_id,
-        name: values.name,
-        description: values.description || null,
-        due_date: values.due_date.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
-        priority: values.priority,
-        attachments: pdfAttachments,
-        loom_url: values.loom_url || null,
-      };
+       const deliverableData = {
+         project_id: values.project_id,
+         name: values.name,
+         description: values.description || null,
+         due_date: values.due_date.toISOString().split('T')[0], // Convert to YYYY-MM-DD format
+         priority: values.priority,
+         attachments: pdfAttachments,
+         loom_url: values.loom_url || null,
+         is_bonus: values.is_bonus,
+       };
 
       if (editingDeliverable) {
         await updateDeliverable(editingDeliverable.id, deliverableData);
@@ -136,19 +140,20 @@ export default function DeliverableManagement() {
     }
   };
 
-  const handleEdit = (deliverable: any) => {
-    setEditingDeliverable(deliverable);
-    setPdfAttachments(Array.isArray(deliverable.attachments) ? deliverable.attachments : []);
-    form.reset({
-      project_id: deliverable.project_id,
-      name: deliverable.name,
-      description: deliverable.description || "",
-      due_date: new Date(deliverable.due_date),
-      priority: deliverable.priority,
-      loom_url: deliverable.loom_url || "",
-    });
-    setIsDialogOpen(true);
-  };
+   const handleEdit = (deliverable: any) => {
+     setEditingDeliverable(deliverable);
+     setPdfAttachments(Array.isArray(deliverable.attachments) ? deliverable.attachments : []);
+     form.reset({
+       project_id: deliverable.project_id,
+       name: deliverable.name,
+       description: deliverable.description || "",
+       due_date: new Date(deliverable.due_date),
+       priority: deliverable.priority,
+       loom_url: deliverable.loom_url || "",
+       is_bonus: deliverable.is_bonus || false,
+     });
+     setIsDialogOpen(true);
+   };
 
   const handleDelete = async (deliverable: any) => {
     try {
@@ -317,6 +322,29 @@ export default function DeliverableManagement() {
 
                  <FormField
                    control={form.control}
+                   name="is_bonus"
+                   render={({ field }) => (
+                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                       <div className="space-y-0.5">
+                         <FormLabel className="text-base">
+                           Bonus Deliverable
+                         </FormLabel>
+                         <FormDescription>
+                           Mark this deliverable as a bonus/extra item
+                         </FormDescription>
+                       </div>
+                       <FormControl>
+                         <Switch
+                           checked={field.value}
+                           onCheckedChange={field.onChange}
+                         />
+                       </FormControl>
+                     </FormItem>
+                   )}
+                 />
+
+                  <FormField
+                   control={form.control}
                    name="loom_url"
                    render={({ field }) => (
                      <FormItem>
@@ -482,12 +510,22 @@ export default function DeliverableManagement() {
           <TableBody>
             {filteredDeliverables.map((deliverable) => (
               <TableRow key={deliverable.id}>
-                <TableCell>
-                  <div className="space-y-1">
-                    <p className="font-medium">{deliverable.name}</p>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{deliverable.description}</p>
-                  </div>
-                </TableCell>
+                 <TableCell>
+                   <div className="space-y-1">
+                     <div className="flex items-center gap-2">
+                       <p className="font-medium">{deliverable.name}</p>
+                       {deliverable.is_bonus && (
+                         <Badge 
+                           variant="outline"
+                           className="text-xs bg-yellow-50 text-yellow-800 border-yellow-300 dark:bg-yellow-950 dark:text-yellow-200 dark:border-yellow-800"
+                         >
+                           ✨ Bonus
+                         </Badge>
+                       )}
+                     </div>
+                     <p className="text-sm text-muted-foreground line-clamp-2">{deliverable.description}</p>
+                   </div>
+                 </TableCell>
                 <TableCell>
                   <span className="text-sm">{deliverable.projects?.name || 'Unknown Project'}</span>
                 </TableCell>

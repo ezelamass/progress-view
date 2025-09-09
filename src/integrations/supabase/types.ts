@@ -99,8 +99,10 @@ export type Database = {
           description: string | null
           due_date: string
           id: string
+          is_bonus: boolean
           loom_url: string | null
           name: string
+          phase_id: string | null
           priority: Database["public"]["Enums"]["deliverable_priority"]
           project_id: string
           status: Database["public"]["Enums"]["deliverable_status"]
@@ -113,8 +115,10 @@ export type Database = {
           description?: string | null
           due_date: string
           id?: string
+          is_bonus?: boolean
           loom_url?: string | null
           name: string
+          phase_id?: string | null
           priority?: Database["public"]["Enums"]["deliverable_priority"]
           project_id: string
           status?: Database["public"]["Enums"]["deliverable_status"]
@@ -127,14 +131,23 @@ export type Database = {
           description?: string | null
           due_date?: string
           id?: string
+          is_bonus?: boolean
           loom_url?: string | null
           name?: string
+          phase_id?: string | null
           priority?: Database["public"]["Enums"]["deliverable_priority"]
           project_id?: string
           status?: Database["public"]["Enums"]["deliverable_status"]
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "deliverables_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "phases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "deliverables_project_id_fkey"
             columns: ["project_id"]
@@ -225,6 +238,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "payments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phases: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string
+          id: string
+          name: string
+          order_index: number
+          phase_type: Database["public"]["Enums"]["phase_type"]
+          project_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["phase_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date: string
+          id?: string
+          name: string
+          order_index?: number
+          phase_type: Database["public"]["Enums"]["phase_type"]
+          project_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["phase_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          order_index?: number
+          phase_type?: Database["public"]["Enums"]["phase_type"]
+          project_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["phase_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phases_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -384,6 +447,8 @@ export type Database = {
       deliverable_priority: "low" | "medium" | "high" | "critical"
       deliverable_status: "pending" | "in_progress" | "completed" | "overdue"
       payment_status: "pending" | "paid" | "overdue" | "cancelled"
+      phase_status: "not_started" | "in_progress" | "completed" | "blocked"
+      phase_type: "descubrimiento" | "desarrollo" | "testing_implementacion"
       project_status: "active" | "paused" | "completed" | "cancelled"
       user_role: "admin" | "client"
     }
@@ -526,6 +591,8 @@ export const Constants = {
       deliverable_priority: ["low", "medium", "high", "critical"],
       deliverable_status: ["pending", "in_progress", "completed", "overdue"],
       payment_status: ["pending", "paid", "overdue", "cancelled"],
+      phase_status: ["not_started", "in_progress", "completed", "blocked"],
+      phase_type: ["descubrimiento", "desarrollo", "testing_implementacion"],
       project_status: ["active", "paused", "completed", "cancelled"],
       user_role: ["admin", "client"],
     },
