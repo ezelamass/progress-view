@@ -117,9 +117,9 @@ const Deliverables = () => {
             const isOverdue = new Date(deliverable.due_date) < new Date() && deliverable.status !== 'completed';
             
             return (
-               <Card key={deliverable.id} className={`bg-card hover:shadow-lg transition-shadow ${
+               <Card key={deliverable.id} className={`bg-card hover:shadow-lg transition-all duration-300 ${
                  deliverable.is_bonus 
-                   ? 'border-yellow-400 border-2 shadow-yellow-100/50' 
+                   ? 'border-2 border-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 bg-gradient-to-br from-amber-50/30 via-yellow-50/20 to-amber-100/30 dark:from-amber-950/20 dark:via-yellow-950/15 dark:to-amber-900/25 shadow-xl shadow-amber-200/30 dark:shadow-amber-800/20 ring-1 ring-amber-300/40 dark:ring-amber-700/30' 
                    : 'border-border/50'
                }`}>
                 <CardHeader className="pb-3">
@@ -145,9 +145,9 @@ const Deliverables = () => {
                      {deliverable.is_bonus && (
                        <Badge 
                          variant="outline"
-                         className="text-xs bg-yellow-50 text-yellow-800 border-yellow-300 dark:bg-yellow-950 dark:text-yellow-200 dark:border-yellow-800"
+                         className="text-xs font-semibold bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-200 text-amber-900 border-amber-400 dark:from-amber-900/50 dark:via-yellow-900/50 dark:to-amber-800/50 dark:text-amber-200 dark:border-amber-500 shadow-sm ring-1 ring-amber-300/20 dark:ring-amber-600/20 px-3 py-1"
                        >
-                         ✨ Bonus
+                         ✨ PREMIUM BONUS
                        </Badge>
                      )}
                      <Badge 
