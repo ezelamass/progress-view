@@ -25,7 +25,7 @@ export const useAdminCharts = () => {
         // Fetch all payments for revenue and status data
         supabase
           .from('payments')
-          .select('amount, status, payment_date, project_id'),
+          .select('amount, status, due_date, project_id'),
 
         // Fetch projects with client info for profitability
         supabase
@@ -77,10 +77,10 @@ export const useAdminCharts = () => {
       
       const monthlyRevenue = payments
         .filter(payment => {
-          if (payment.status !== 'paid' || !payment.payment_date) return false;
-          const paymentDate = new Date(payment.payment_date);
-          return paymentDate.getMonth() === targetDate.getMonth() && 
-                 paymentDate.getFullYear() === targetDate.getFullYear();
+          if (payment.status !== 'paid' || !payment.due_date) return false;
+          const dueDate = new Date(payment.due_date);
+          return dueDate.getMonth() === targetDate.getMonth() && 
+                 dueDate.getFullYear() === targetDate.getFullYear();
         })
         .reduce((sum, payment) => sum + Number(payment.amount), 0);
 
