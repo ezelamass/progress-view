@@ -354,6 +354,7 @@ export default function AdminDashboard() {
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))" 
                   tickFormatter={(value) => `$${value}`}
+                  domain={[300, 2500]}
                 />
                 <Tooltip 
                   contentStyle={{ 
