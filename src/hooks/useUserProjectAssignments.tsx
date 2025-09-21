@@ -21,10 +21,12 @@ export interface UserProjectAssignment {
 }
 
 export interface User {
+  id: string;
   user_id: string;
   email: string;
   first_name: string | null;
   last_name: string | null;
+  role: 'admin' | 'client' | 'team';
 }
 
 export interface Project {
@@ -118,7 +120,7 @@ export const useUserProjectAssignments = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, email, first_name, last_name')
+        .select('id, user_id, email, first_name, last_name, role')
         .order('email');
 
       if (error) throw error;

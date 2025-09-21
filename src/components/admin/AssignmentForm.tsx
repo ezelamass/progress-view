@@ -37,7 +37,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
   const getUserDisplayName = (user: User) => {
     const name = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-    return name ? `${name} (${user.email})` : user.email;
+    const roleLabel = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+    return name ? `${name} (${roleLabel}) - ${user.email}` : `${user.email} (${roleLabel})`;
   };
 
   const getProjectDisplayName = (project: Project) => {

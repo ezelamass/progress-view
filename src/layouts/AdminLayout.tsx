@@ -36,6 +36,11 @@ const adminNavItems = [
     icon: LayoutDashboard,
   },
   {
+    title: "Users",
+    href: "/admin/users",
+    icon: User,
+  },
+  {
     title: "Clients",
     href: "/admin/clients",
     icon: Users,

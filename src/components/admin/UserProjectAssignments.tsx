@@ -5,6 +5,7 @@ import { Users, Link } from 'lucide-react';
 import { useUserProjectAssignments } from '@/hooks/useUserProjectAssignments';
 import { AssignmentForm } from './AssignmentForm';
 import { AssignmentsTable } from './AssignmentsTable';
+import { AssignmentHistoryTable } from './AssignmentHistoryTable';
 
 export const UserProjectAssignments: React.FC = () => {
   const {
@@ -58,6 +59,13 @@ export const UserProjectAssignments: React.FC = () => {
             onDeleteAssignment={deleteAssignment}
             loading={loading}
           />
+        </div>
+
+        <Separator />
+
+        {/* Assignment History */}
+        <div>
+          <AssignmentHistoryTable />
         </div>
       </CardContent>
     </Card>

@@ -23,6 +23,7 @@ import PaymentManagement from "./pages/admin/PaymentManagement";
 import DeliverableManagement from "./pages/admin/DeliverableManagement";
 import MeetingManagement from "./pages/admin/MeetingManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
+import UserManagement from "./pages/admin/UserManagement";
 import AdminPageGuard from "./components/AdminPageGuard";
 
 const queryClient = new QueryClient();
@@ -91,6 +92,11 @@ const App = () => (
     <Route index element={
       <AdminPageGuard allowedRoles={['admin']}>
         <AdminDashboard />
+      </AdminPageGuard>
+    } />
+    <Route path="users" element={
+      <AdminPageGuard allowedRoles={['admin']}>
+        <UserManagement />
       </AdminPageGuard>
     } />
     <Route path="clients" element={
