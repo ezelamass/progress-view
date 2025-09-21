@@ -78,6 +78,21 @@ export default function AdminLayout() {
   const location = useLocation();
   const { profile, signOut } = useAuth();
 
+  // Filter navigation items based on user role
+  const getFilteredNavItems = () => {
+    if (profile?.role === 'team') {
+      // Team members can only see Phases, Deliverables, and Meetings
+      return adminNavItems.filter(item => 
+        item.href === '/admin/phases' || 
+        item.href === '/admin/deliverables' || 
+        item.href === '/admin/meetings'
+      );
+    }
+    return adminNavItems; // Admins see all items
+  };
+
+  const filteredNavItems = getFilteredNavItems();
+
   // Load collapsed state from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('admin-sidebar-collapsed');
@@ -140,7 +155,9 @@ export default function AdminLayout() {
                 </div>
                 {!sidebarCollapsed && (
                   <div className="min-w-0">
-                    <h1 className="text-lg font-semibold text-foreground truncate">Admin Console</h1>
+                    <h1 className="text-lg font-semibold text-foreground truncate">
+                      {profile?.role === 'team' ? 'Team Console' : 'Admin Console'}
+                    </h1>
                     <p className="text-xs text-muted-foreground truncate">Client Hub Management</p>
                   </div>
                 )}
@@ -163,7 +180,7 @@ export default function AdminLayout() {
 
             {/* Navigation */}
             <nav className="flex-1 space-y-1 p-4">
-              {adminNavItems.map((item) => {
+              {filteredNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isActivePath(item.href);
                 

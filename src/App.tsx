@@ -23,6 +23,7 @@ import PaymentManagement from "./pages/admin/PaymentManagement";
 import DeliverableManagement from "./pages/admin/DeliverableManagement";
 import MeetingManagement from "./pages/admin/MeetingManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminPageGuard from "./components/AdminPageGuard";
 
 const queryClient = new QueryClient();
 
@@ -81,21 +82,53 @@ const App = () => (
                     </ProtectedRoute>
                   } />
                   
-                  {/* Admin Routes - Protected for admin role */}
-                  <Route path="/admin" element={
-                    <ProtectedRoute requiredRole="admin">
-                      <AdminLayout />
-                    </ProtectedRoute>
-                  }>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="clients" element={<ClientManagement />} />
-                    <Route path="projects" element={<ProjectManagement />} />
-                    <Route path="phases" element={<PhaseManagement />} />
-                    <Route path="deliverables" element={<DeliverableManagement />} />
-                    <Route path="payments" element={<PaymentManagement />} />
-                    <Route path="meetings" element={<MeetingManagement />} />
-                    <Route path="settings" element={<AdminSettings />} />
-                  </Route>
+  {/* Admin Routes - Protected for admin and team roles */}
+  <Route path="/admin" element={
+    <ProtectedRoute>
+      <AdminLayout />
+    </ProtectedRoute>
+  }>
+    <Route index element={
+      <AdminPageGuard allowedRoles={['admin']}>
+        <AdminDashboard />
+      </AdminPageGuard>
+    } />
+    <Route path="clients" element={
+      <AdminPageGuard allowedRoles={['admin']}>
+        <ClientManagement />
+      </AdminPageGuard>
+    } />
+    <Route path="projects" element={
+      <AdminPageGuard allowedRoles={['admin']}>
+        <ProjectManagement />
+      </AdminPageGuard>
+    } />
+    <Route path="phases" element={
+      <AdminPageGuard allowedRoles={['admin', 'team']}>
+        <PhaseManagement />
+      </AdminPageGuard>
+    } />
+    <Route path="deliverables" element={
+      <AdminPageGuard allowedRoles={['admin', 'team']}>
+        <DeliverableManagement />
+      </AdminPageGuard>
+    } />
+    <Route path="payments" element={
+      <AdminPageGuard allowedRoles={['admin']}>
+        <PaymentManagement />
+      </AdminPageGuard>
+    } />
+    <Route path="meetings" element={
+      <AdminPageGuard allowedRoles={['admin', 'team']}>
+        <MeetingManagement />
+      </AdminPageGuard>
+    } />
+    <Route path="settings" element={
+      <AdminPageGuard allowedRoles={['admin']}>
+        <AdminSettings />
+      </AdminPageGuard>
+    } />
+  </Route>
                   
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />

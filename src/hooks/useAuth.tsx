@@ -9,7 +9,7 @@ interface Profile {
   email: string;
   first_name?: string;
   last_name?: string;
-  role: 'admin' | 'client';
+  role: 'admin' | 'client' | 'team';
   avatar_url?: string;
 }
 
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               
               // Role-based redirect only on sign in
               if (event === 'SIGNED_IN' && profileData) {
-                if (profileData.role === 'admin') {
+                if (profileData.role === 'admin' || profileData.role === 'team') {
                   navigate('/admin');
                 } else {
                   navigate('/');
