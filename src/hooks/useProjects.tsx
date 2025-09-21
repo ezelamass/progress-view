@@ -51,9 +51,6 @@ export const useProjects = (user?: any) => {
 
       // If user is a client or team member, only fetch their assigned projects
       if (profile?.role === 'client' || profile?.role === 'team') {
-        query = query
-          .eq('user_project_assignments.user_id', user.id)
-          .not('user_project_assignments', 'is', null);
         
         const { data, error } = await supabase
           .from('projects')
