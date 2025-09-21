@@ -25,6 +25,7 @@ import DeliverableManagement from "./pages/admin/DeliverableManagement";
 import MeetingManagement from "./pages/admin/MeetingManagement";
 import TeamPaymentRateManagement from "./pages/admin/TeamPaymentRateManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
+import UserManagement from "./pages/admin/UserManagement";
 import AdminPageGuard from "./components/AdminPageGuard";
 
 const queryClient = new QueryClient();
