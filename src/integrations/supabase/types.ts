@@ -450,7 +450,7 @@ export type Database = {
       phase_status: "not_started" | "in_progress" | "completed" | "blocked"
       phase_type: "descubrimiento" | "desarrollo" | "testing_implementacion"
       project_status: "active" | "paused" | "completed" | "cancelled"
-      user_role: "admin" | "client"
+      user_role: "admin" | "client" | "team"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -594,7 +594,7 @@ export const Constants = {
       phase_status: ["not_started", "in_progress", "completed", "blocked"],
       phase_type: ["descubrimiento", "desarrollo", "testing_implementacion"],
       project_status: ["active", "paused", "completed", "cancelled"],
-      user_role: ["admin", "client"],
+      user_role: ["admin", "client", "team"],
     },
   },
 } as const
