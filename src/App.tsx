@@ -20,6 +20,7 @@ import ClientManagement from "./pages/admin/ClientManagement";
 import ProjectManagement from "./pages/admin/ProjectManagement";
 import PhaseManagement from "./pages/admin/PhaseManagement";
 import PaymentManagement from "./pages/admin/PaymentManagement";
+import TeamPaymentManagement from "./pages/admin/TeamPaymentManagement";
 import DeliverableManagement from "./pages/admin/DeliverableManagement";
 import MeetingManagement from "./pages/admin/MeetingManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
@@ -119,9 +120,9 @@ const App = () => (
         <DeliverableManagement />
       </AdminPageGuard>
     } />
-    <Route path="payments" element={
+    <Route path="team-payments" element={
       <AdminPageGuard allowedRoles={['admin']}>
-        <PaymentManagement />
+        <TeamPaymentManagement />
       </AdminPageGuard>
     } />
     <Route path="meetings" element={

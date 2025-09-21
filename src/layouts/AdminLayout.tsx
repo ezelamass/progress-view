@@ -61,9 +61,14 @@ const adminNavItems = [
     icon: CheckSquare,
   },
   {
-    title: "Payments",
+    title: "Client Payments",
     href: "/admin/payments",
     icon: CreditCard,
+  },
+  {
+    title: "Team Payments",
+    href: "/admin/team-payments",
+    icon: Users,
   },
   {
     title: "Meetings",

@@ -387,6 +387,116 @@ export type Database = {
           },
         ]
       }
+      team_payment_rates: {
+        Row: {
+          created_at: string
+          currency: string
+          effective_from: string
+          effective_until: string | null
+          id: string
+          is_active: boolean
+          project_id: string | null
+          rate_amount: number
+          rate_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean
+          project_id?: string | null
+          rate_amount: number
+          rate_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean
+          project_id?: string | null
+          rate_amount?: number
+          rate_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      team_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          due_date: string | null
+          hours_worked: number | null
+          id: string
+          invoice_number: string | null
+          notes: string | null
+          payment_date: string | null
+          payment_method: string | null
+          payment_type: string
+          project_id: string | null
+          rate_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          due_date?: string | null
+          hours_worked?: number | null
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_type: string
+          project_id?: string | null
+          rate_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          due_date?: string | null
+          hours_worked?: number | null
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_type?: string
+          project_id?: string | null
+          rate_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_payments_rate_id_fkey"
+            columns: ["rate_id"]
+            isOneToOne: false
+            referencedRelation: "team_payment_rates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_project_assignments: {
         Row: {
           assigned_at: string
