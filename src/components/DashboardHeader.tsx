@@ -162,8 +162,8 @@ const DashboardHeader = () => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 
-                {/* Project Selector for clients with multiple projects */}
-                {profile?.role === 'client' && projects.length > 1 && (
+                {/* Project Selector for clients and team members with multiple projects */}
+                {(profile?.role === 'client' || profile?.role === 'team') && projects.length > 1 && (
                   <>
                     <DropdownMenuLabel className="text-xs text-muted-foreground">
                       {language === 'es' ? 'Cambiar Proyecto' : 'Switch Project'}
@@ -205,7 +205,7 @@ const DashboardHeader = () => {
                   {language === 'es' ? 'Perfil' : 'Profile'}
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/payments" className="cursor-pointer flex">
+                  <Link to={profile?.role === 'team' ? "/team/payments" : "/payments"} className="cursor-pointer flex">
                     <CreditCard className="mr-2 h-4 w-4" />
                     {language === 'es' ? 'Historial de Pagos' : 'Payment History'}
                   </Link>

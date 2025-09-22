@@ -4,13 +4,25 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'admin' | 'client' | 'team';
+  requiredRole?: 'admin' | 'client' | 'team' | ('admin' | 'client' | 'team')[];
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Helper function to check if user role is authorized
+  const isAuthorized = (
+    userRole: string | undefined, 
+    required: 'admin' | 'client' | 'team' | ('admin' | 'client' | 'team')[]
+  ): boolean => {
+    if (!userRole) return false;
+    if (Array.isArray(required)) {
+      return required.includes(userRole as 'admin' | 'client' | 'team');
+    }
+    return userRole === required;
+  };
 
   useEffect(() => {
     if (!loading) {
@@ -19,7 +31,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         return;
       }
 
-      if (requiredRole && profile?.role !== requiredRole) {
+      if (requiredRole && !isAuthorized(profile?.role, requiredRole)) {
         // Redirect based on actual role
         if (profile?.role === 'admin' || profile?.role === 'team') {
           navigate('/admin');
@@ -50,7 +62,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return null;
   }
 
-  if (requiredRole && profile?.role !== requiredRole) {
+  if (requiredRole && !isAuthorized(profile?.role, requiredRole)) {
     return null;
   }
 

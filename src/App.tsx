@@ -26,6 +26,7 @@ import MeetingManagement from "./pages/admin/MeetingManagement";
 import TeamPaymentRateManagement from "./pages/admin/TeamPaymentRateManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import UserManagement from "./pages/admin/UserManagement";
+import TeamPayments from "./pages/team/TeamPayments";
 import AdminPageGuard from "./components/AdminPageGuard";
 
 const queryClient = new QueryClient();
@@ -34,7 +35,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   
   // Show header on main app routes (but not admin routes)
-  const showHeader = ['/', '/calendar', '/deliverables', '/payments', '/help'].includes(location.pathname);
+  const showHeader = ['/', '/calendar', '/deliverables', '/payments', '/help', '/team/payments'].includes(location.pathname);
   
   return (
     <div className="min-h-screen bg-background">
@@ -58,9 +59,9 @@ const App = () => (
                   {/* Auth Route - No protection needed */}
                   <Route path="/auth" element={<Auth />} />
                   
-                  {/* Client Routes - Protected for client role */}
+                  {/* Client and Team Routes - Protected for client and team roles */}
                   <Route path="/" element={
-                    <ProtectedRoute requiredRole="client">
+                    <ProtectedRoute requiredRole={['client', 'team']}>
                       <MainLayout><Index /></MainLayout>
                     </ProtectedRoute>
                   } />
@@ -79,8 +80,13 @@ const App = () => (
                       <MainLayout><Payments /></MainLayout>
                     </ProtectedRoute>
                   } />
+                  <Route path="/team/payments" element={
+                    <ProtectedRoute requiredRole="team">
+                      <MainLayout><TeamPayments /></MainLayout>
+                    </ProtectedRoute>
+                  } />
                   <Route path="/help" element={
-                    <ProtectedRoute requiredRole="client">
+                    <ProtectedRoute requiredRole={['client', 'team']}>
                       <MainLayout><Help /></MainLayout>
                     </ProtectedRoute>
                   } />
