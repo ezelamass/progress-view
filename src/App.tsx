@@ -27,6 +27,7 @@ import TeamPaymentRateManagement from "./pages/admin/TeamPaymentRateManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import UserManagement from "./pages/admin/UserManagement";
 import TeamPayments from "./pages/team/TeamPayments";
+import TeamCalendar from "./pages/team/TeamCalendar";
 import AdminPageGuard from "./components/AdminPageGuard";
 
 const queryClient = new QueryClient();
@@ -35,7 +36,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   
   // Show header on main app routes (but not admin routes)
-  const showHeader = ['/', '/calendar', '/deliverables', '/payments', '/help', '/team/payments'].includes(location.pathname);
+  const showHeader = ['/', '/calendar', '/deliverables', '/payments', '/help', '/team/payments', '/team/calendar'].includes(location.pathname);
   
   return (
     <div className="min-h-screen bg-background">
@@ -78,6 +79,11 @@ const App = () => (
                   <Route path="/payments" element={
                     <ProtectedRoute requiredRole="client">
                       <MainLayout><Payments /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/team/calendar" element={
+                    <ProtectedRoute requiredRole="team">
+                      <MainLayout><TeamCalendar /></MainLayout>
                     </ProtectedRoute>
                   } />
                   <Route path="/team/payments" element={

@@ -35,39 +35,11 @@ const Index = () => {
     return 'there';
   };
 
-  // Team member dashboard
+  // Team member dashboard - redirect to calendar
   if (profile?.role === 'team') {
-    return (
-      <div className="container mx-auto px-6 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            {language === 'es' ? `Bienvenido de vuelta, ${getDisplayName()}` : `Welcome back, ${getDisplayName()}`}
-          </h1>
-          <p className="text-muted-foreground">
-            {language === 'es' 
-              ? 'Aquí tienes un resumen de tus pagos y ganancias.'
-              : "Here's an overview of your payments and earnings."
-            }
-          </p>
-        </div>
-
-        {/* Team Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Payment Info */}
-          <div className="lg:col-span-2 space-y-6">
-            <TeamPaymentSummary />
-            <TeamPaymentHistory />
-          </div>
-
-          {/* Right Column - Projections */}
-          <div className="space-y-6">
-            <TeamEarningsProjection />
-            <RecentActivity project={selectedProject} />
-          </div>
-        </div>
-      </div>
-    );
+    // Redirect team members to calendar by default
+    window.location.href = '/team/calendar';
+    return null;
   }
 
   return (

@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, User, Settings, LogOut, CreditCard, Home, Calendar, HelpCircle, Building2 } from "lucide-react";
+import { Bell, ChevronDown, User, Settings, LogOut, CreditCard, Home, Calendar, HelpCircle, Building2, DollarSign } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -204,12 +204,36 @@ const DashboardHeader = () => {
                   <User className="mr-2 h-4 w-4" />
                   {language === 'es' ? 'Perfil' : 'Profile'}
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to={profile?.role === 'team' ? "/team/payments" : "/payments"} className="cursor-pointer flex">
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    {language === 'es' ? 'Historial de Pagos' : 'Payment History'}
-                  </Link>
-                </DropdownMenuItem>
+
+                {/* Team member navigation */}
+                {profile?.role === 'team' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/team/calendar" className="w-full flex items-center">
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {language === 'es' ? 'Calendario' : 'Calendar'}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/team/payments" className="w-full flex items-center">
+                        <DollarSign className="mr-2 h-4 w-4" />
+                        {language === 'es' ? 'Mis Pagos' : 'My Payments'}
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                {/* Client payment history */}
+                {profile?.role === 'client' && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/payments" className="cursor-pointer flex">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      {language === 'es' ? 'Historial de Pagos' : 'Payment History'}
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+
                 <DropdownMenuItem onClick={() => setShowAccountSettings(true)}>
                   <Settings className="mr-2 h-4 w-4" />
                   {language === 'es' ? 'Configuración de Cuenta' : 'Account Settings'}

@@ -141,7 +141,26 @@ const TeamPaymentManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
+                <div className="space-y-2">
+                  <Label htmlFor="project">Project (Optional)</Label>
+                  <Select value={formData.project_id || ""} onValueChange={(value) => setFormData({...formData, project_id: value || null})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="No specific project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No specific project</SelectItem>
+                      {projects.map(project => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="amount">Amount</Label>
                   <Input
@@ -153,6 +172,114 @@ const TeamPaymentManagement = () => {
                     required
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select value={formData.currency} onValueChange={(value) => setFormData({...formData, currency: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="GBP">GBP</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="payment_type">Payment Type</Label>
+                  <Select value={formData.payment_type} onValueChange={(value) => setFormData({...formData, payment_type: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="salary">Salary</SelectItem>
+                      <SelectItem value="hourly">Hourly</SelectItem>
+                      <SelectItem value="bonus">Bonus</SelectItem>
+                      <SelectItem value="commission">Commission</SelectItem>
+                      <SelectItem value="desarrollo">Desarrollo</SelectItem>
+                      <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="due_date">Due Date</Label>
+                  <Input
+                    id="due_date"
+                    type="date"
+                    value={formData.due_date || ""}
+                    onChange={(e) => setFormData({...formData, due_date: e.target.value || null})}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="hours_worked">Hours Worked (Optional)</Label>
+                  <Input
+                    id="hours_worked"
+                    type="number"
+                    step="0.25"
+                    placeholder="0"
+                    value={formData.hours_worked || ""}
+                    onChange={(e) => setFormData({...formData, hours_worked: e.target.value})}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="payment_method">Payment Method</Label>
+                  <Select value={formData.payment_method || ""} onValueChange={(value) => setFormData({...formData, payment_method: value || null})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="paypal">PayPal</SelectItem>
+                      <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                      <SelectItem value="check">Check</SelectItem>
+                      <SelectItem value="cash">Cash</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Input
+                  id="description"
+                  placeholder="Payment description or notes..."
+                  value={formData.description || ""}
+                  onChange={(e) => setFormData({...formData, description: e.target.value || null})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Internal Notes (Optional)</Label>
+                <Input
+                  id="notes"
+                  placeholder="Internal notes for admin reference..."
+                  value={formData.notes || ""}
+                  onChange={(e) => setFormData({...formData, notes: e.target.value || null})}
+                />
               </div>
 
               <div className="flex justify-end space-x-2">
@@ -192,9 +319,12 @@ const TeamPaymentManagement = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Team Member</TableHead>
+                  <TableHead>Team Member</TableHead>
+                    <TableHead>Project</TableHead>
                     <TableHead>Amount</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Due Date</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -212,14 +342,29 @@ const TeamPaymentManagement = () => {
                         </div>
                       </TableCell>
                       <TableCell>
+                        <div className="text-sm">
+                          {payment.projects?.name || 'No project'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <div className="font-medium">
                           {payment.currency} {payment.amount}
                         </div>
                       </TableCell>
                       <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {payment.payment_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         <Badge className={getStatusColor(payment.status)}>
                           {payment.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {payment.due_date ? new Date(payment.due_date).toLocaleDateString() : 'No due date'}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
