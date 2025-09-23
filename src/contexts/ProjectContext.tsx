@@ -17,10 +17,10 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
   const { projects, loading: projectsLoading, refetch } = useProjects(user);
   const [selectedProject, setSelectedProjectState] = useState<ProjectWithClient | null>(null);
 
-  // Auto-select first project for clients, or use stored selection
+  // Auto-select first project for clients and team members, or use stored selection
   useEffect(() => {
     // Wait for both auth and projects to load
-    if (!authLoading && !projectsLoading && profile?.role === 'client' && projects.length > 0) {
+    if (!authLoading && !projectsLoading && (profile?.role === 'client' || profile?.role === 'team') && projects.length > 0) {
       if (!selectedProject) {
         const storedProjectId = localStorage.getItem('selectedProjectId');
         
@@ -40,7 +40,7 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
 
   // Reset selected project when user changes or projects change
   useEffect(() => {
-    if (!authLoading && profile?.role === 'client') {
+    if (!authLoading && (profile?.role === 'client' || profile?.role === 'team')) {
       if (projects.length === 0) {
         setSelectedProjectState(null);
       } else if (selectedProject && !projects.find(p => p.id === selectedProject.id)) {
@@ -60,8 +60,8 @@ export const ProjectProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
-  // Only provide context if user is a client
-  if (profile?.role !== 'client') {
+  // Only provide context if user is a client or team member
+  if (profile?.role !== 'client' && profile?.role !== 'team') {
     return <>{children}</>;
   }
 

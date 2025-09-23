@@ -83,12 +83,16 @@ const App = () => (
                   } />
                   <Route path="/team/calendar" element={
                     <ProtectedRoute requiredRole="team">
-                      <MainLayout><TeamCalendar /></MainLayout>
+                      <ProjectProvider>
+                        <MainLayout><TeamCalendar /></MainLayout>
+                      </ProjectProvider>
                     </ProtectedRoute>
                   } />
                   <Route path="/team/payments" element={
                     <ProtectedRoute requiredRole="team">
-                      <MainLayout><TeamPayments /></MainLayout>
+                      <ProjectProvider>
+                        <MainLayout><TeamPayments /></MainLayout>
+                      </ProjectProvider>
                     </ProtectedRoute>
                   } />
                   <Route path="/help" element={

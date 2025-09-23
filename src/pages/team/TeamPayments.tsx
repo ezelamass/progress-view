@@ -11,9 +11,10 @@ import { useMemo } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const TeamPayments = () => {
-  const { payments, loading } = useTeamPayments();
-  const { profile } = useAuth();
   const projectContext = useProjectOptional();
+  const selectedProjectId = projectContext?.selectedProject?.id;
+  const { payments, loading } = useTeamPayments(selectedProjectId);
+  const { profile } = useAuth();
   const { language } = useTheme();
   
   // Filter payments for current user and optionally by selected project

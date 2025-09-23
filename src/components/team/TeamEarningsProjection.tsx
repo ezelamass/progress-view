@@ -6,10 +6,13 @@ import { useTeamPayments } from '@/hooks/useTeamPayments';
 import { useTeamPaymentRates } from '@/hooks/useTeamPaymentRates';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuth } from '@/hooks/useAuth';
+import { useProjectOptional } from '@/contexts/ProjectContext';
 import { format, addMonths, startOfMonth, endOfMonth, differenceInDays } from 'date-fns';
 
 const TeamEarningsProjection = () => {
-  const { payments } = useTeamPayments();
+  const projectContext = useProjectOptional();
+  const selectedProjectId = projectContext?.selectedProject?.id;
+  const { payments } = useTeamPayments(selectedProjectId);
   const { rates } = useTeamPaymentRates();
   const { projects } = useProjects();
   const { profile } = useAuth();

@@ -4,10 +4,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DollarSign, Calendar, FileText } from 'lucide-react';
 import { useTeamPayments } from '@/hooks/useTeamPayments';
 import { useAuth } from '@/hooks/useAuth';
+import { useProjectOptional } from '@/contexts/ProjectContext';
 import { format } from 'date-fns';
 
 const TeamPaymentHistory = () => {
-  const { payments, loading } = useTeamPayments();
+  const projectContext = useProjectOptional();
+  const selectedProjectId = projectContext?.selectedProject?.id;
+  const { payments, loading } = useTeamPayments(selectedProjectId);
   const { profile } = useAuth();
 
   if (loading) {

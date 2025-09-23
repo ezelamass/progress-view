@@ -18,7 +18,7 @@ export interface TeamPaymentWithDetails extends TeamPayment {
   } | null;
 }
 
-export const useTeamPayments = () => {
+export const useTeamPayments = (projectId?: string) => {
   const [payments, setPayments] = useState<TeamPaymentWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -26,7 +26,7 @@ export const useTeamPayments = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('team_payments')
         .select(`
           *,
@@ -40,6 +40,13 @@ export const useTeamPayments = () => {
           )
         `)
         .order('created_at', { ascending: false });
+
+      // Filter by project if provided
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setPayments((data as unknown) as TeamPaymentWithDetails[] || []);
@@ -131,7 +138,7 @@ export const useTeamPayments = () => {
 
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [projectId]);
 
   return {
     payments,

@@ -3,10 +3,13 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, TrendingUp, Calendar, Clock } from 'lucide-react';
 import { useTeamPayments } from '@/hooks/useTeamPayments';
 import { useAuth } from '@/hooks/useAuth';
+import { useProjectOptional } from '@/contexts/ProjectContext';
 import { format, startOfMonth, endOfMonth, addMonths } from 'date-fns';
 
 const TeamPaymentSummary = () => {
-  const { payments, loading } = useTeamPayments();
+  const projectContext = useProjectOptional();
+  const selectedProjectId = projectContext?.selectedProject?.id;
+  const { payments, loading } = useTeamPayments(selectedProjectId);
   const { profile } = useAuth();
 
   if (loading) {
