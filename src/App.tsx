@@ -133,6 +133,11 @@ const App = () => (
         <DeliverableManagement />
       </AdminPageGuard>
     } />
+    <Route path="payments" element={
+      <AdminPageGuard allowedRoles={['admin']}>
+        <PaymentManagement />
+      </AdminPageGuard>
+    } />
     <Route path="team-payments" element={
       <AdminPageGuard allowedRoles={['admin']}>
         <TeamPaymentManagement />
