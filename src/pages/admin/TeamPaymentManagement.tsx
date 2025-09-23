@@ -25,10 +25,10 @@ const TeamPaymentManagement = () => {
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [formData, setFormData] = useState({
     user_id: '',
-    project_id: '',
+    project_id: 'none',
     amount: '',
     currency: 'USD',
-    payment_type: 'salary',
+    payment_type: 'desarrollo',
     status: 'pending',
     due_date: '',
     description: '',
@@ -46,7 +46,7 @@ const TeamPaymentManagement = () => {
       ...formData,
       amount: parseFloat(formData.amount),
       hours_worked: formData.hours_worked ? parseFloat(formData.hours_worked) : null,
-      project_id: formData.project_id || null,
+      project_id: formData.project_id === 'none' ? null : formData.project_id,
       due_date: formData.due_date || null,
     };
 
@@ -60,10 +60,10 @@ const TeamPaymentManagement = () => {
 
     setFormData({
       user_id: '',
-      project_id: '',
+      project_id: 'none',
       amount: '',
       currency: 'USD',
-      payment_type: 'salary',
+      payment_type: 'desarrollo',
       status: 'pending',
       due_date: '',
       description: '',
@@ -77,7 +77,7 @@ const TeamPaymentManagement = () => {
     setEditingPayment(payment);
     setFormData({
       user_id: payment.user_id,
-      project_id: payment.project_id || '',
+      project_id: payment.project_id || 'none',
       amount: payment.amount.toString(),
       currency: payment.currency,
       payment_type: payment.payment_type,
@@ -144,12 +144,12 @@ const TeamPaymentManagement = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="project">Project (Optional)</Label>
-                  <Select value={formData.project_id || ""} onValueChange={(value) => setFormData({...formData, project_id: value || null})}>
+                  <Select value={formData.project_id} onValueChange={(value) => setFormData({...formData, project_id: value})}>
                     <SelectTrigger>
                       <SelectValue placeholder="No specific project" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No specific project</SelectItem>
+                      <SelectItem value="none">No specific project</SelectItem>
                       {projects.map(project => (
                         <SelectItem key={project.id} value={project.id}>
                           {project.name}
@@ -194,12 +194,11 @@ const TeamPaymentManagement = () => {
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="salary">Salary</SelectItem>
-                      <SelectItem value="hourly">Hourly</SelectItem>
-                      <SelectItem value="bonus">Bonus</SelectItem>
-                      <SelectItem value="commission">Commission</SelectItem>
                       <SelectItem value="desarrollo">Desarrollo</SelectItem>
                       <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
+                      <SelectItem value="bonus">Bonus</SelectItem>
+                      <SelectItem value="commission">Commission</SelectItem>
+                      <SelectItem value="reimbursement">Reimbursement</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -247,11 +246,12 @@ const TeamPaymentManagement = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="payment_method">Payment Method</Label>
-                  <Select value={formData.payment_method || ""} onValueChange={(value) => setFormData({...formData, payment_method: value || null})}>
+                  <Select value={formData.payment_method || "none"} onValueChange={(value) => setFormData({...formData, payment_method: value === 'none' ? '' : value})}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select method" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">No payment method</SelectItem>
                       <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                       <SelectItem value="paypal">PayPal</SelectItem>
                       <SelectItem value="crypto">Cryptocurrency</SelectItem>
