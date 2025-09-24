@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import DashboardHeader from "./components/DashboardHeader";
 import AdminLayout from "./layouts/AdminLayout";
+import TeamLayout from "./layouts/TeamLayout";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProjectProvider } from "./contexts/ProjectContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -81,16 +82,17 @@ const App = () => (
                       <MainLayout><Payments /></MainLayout>
                     </ProtectedRoute>
                   } />
-                  <Route path="/team/calendar" element={
+                  
+                  {/* Team Routes - Protected for team role with dedicated layout */}
+                  <Route path="/team" element={
                     <ProtectedRoute requiredRole="team">
-                      <MainLayout><TeamCalendar /></MainLayout>
+                      <TeamLayout />
                     </ProtectedRoute>
-                  } />
-                  <Route path="/team/payments" element={
-                    <ProtectedRoute requiredRole="team">
-                      <MainLayout><TeamPayments /></MainLayout>
-                    </ProtectedRoute>
-                  } />
+                  }>
+                    <Route path="calendar" element={<TeamCalendar />} />
+                    <Route path="payments" element={<TeamPayments />} />
+                  </Route>
+                  
                   <Route path="/help" element={
                     <ProtectedRoute requiredRole={['client', 'team']}>
                       <MainLayout><Help /></MainLayout>

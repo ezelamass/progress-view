@@ -217,8 +217,8 @@ const DashboardHeader = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/team/payments" className="w-full flex items-center">
-                        <DollarSign className="mr-2 h-4 w-4" />
-                        {language === 'es' ? 'Mis Pagos' : 'My Payments'}
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        {language === 'es' ? 'Mis Pagos' : 'Payments'}
                       </Link>
                     </DropdownMenuItem>
                   </>
