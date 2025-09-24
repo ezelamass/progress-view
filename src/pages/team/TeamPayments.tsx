@@ -1,4 +1,4 @@
-import { ArrowLeft, Download, Filter, DollarSign } from "lucide-react";
+import { ArrowLeft, Download, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useTeamPayments } from "@/hooks/useTeamPayments";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjectOptional } from "@/contexts/ProjectContext";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
+import ProjectBreadcrumb from "@/components/ProjectBreadcrumb";
+import PaymentFilters, { PaymentFilters as PaymentFiltersType } from "@/components/PaymentFilters";
 
 const TeamPayments = () => {
   const projectContext = useProjectOptional();
@@ -17,7 +19,14 @@ const TeamPayments = () => {
   const { profile } = useAuth();
   const { language } = useTheme();
   
-  // Filter payments for current user and optionally by selected project
+  const [filters, setFilters] = useState<PaymentFiltersType>({
+    status: 'all',
+    paymentType: 'all',
+    dateFrom: undefined,
+    dateTo: undefined,
+  });
+  
+  // Filter payments for current user and optionally by selected project and filters
   const filteredPayments = useMemo(() => {
     let userPayments = payments.filter(payment => payment.user_id === profile?.user_id);
     
@@ -25,8 +34,31 @@ const TeamPayments = () => {
       userPayments = userPayments.filter(payment => payment.project_id === projectContext.selectedProject?.id);
     }
     
+    // Apply filters
+    if (filters.status !== 'all') {
+      userPayments = userPayments.filter(payment => payment.status === filters.status);
+    }
+    
+    if (filters.paymentType !== 'all') {
+      userPayments = userPayments.filter(payment => payment.payment_type === filters.paymentType);
+    }
+    
+    if (filters.dateFrom) {
+      userPayments = userPayments.filter(payment => {
+        const paymentDate = new Date(payment.payment_date || payment.created_at);
+        return paymentDate >= filters.dateFrom!;
+      });
+    }
+    
+    if (filters.dateTo) {
+      userPayments = userPayments.filter(payment => {
+        const paymentDate = new Date(payment.payment_date || payment.created_at);
+        return paymentDate <= filters.dateTo!;
+      });
+    }
+    
     return userPayments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [payments, profile?.user_id, projectContext?.selectedProject]);
+  }, [payments, profile?.user_id, projectContext?.selectedProject, filters]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(language === 'es' ? 'es-ES' : 'en-US', {
@@ -74,14 +106,16 @@ const TeamPayments = () => {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'salary':
-        return '💰';
+      case 'desarrollo':
+        return '💻';
+      case 'mantenimiento':
+        return '🔧';
       case 'bonus':
         return '🎁';
-      case 'hourly':
-        return '⏰';
       case 'commission':
         return '📈';
+      case 'reimbursement':
+        return '💳';
       default:
         return '💵';
     }
@@ -103,18 +137,32 @@ const TeamPayments = () => {
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
                   {language === 'es' ? 'Mis Pagos' : 'My Payments'}
+                  {projectContext?.selectedProject && (
+                    <span className="text-base font-normal text-muted-foreground ml-2">
+                      - {projectContext.selectedProject.name}
+                    </span>
+                  )}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {language === 'es' ? 'Ver tu historial de pagos y ganancias' : 'View your payment history and earnings'}
+                  {projectContext?.selectedProject 
+                    ? (language === 'es' ? `Pagos para el proyecto ${projectContext.selectedProject.name}` : `Payments for ${projectContext.selectedProject.name}`)
+                    : (language === 'es' ? 'Ver tu historial de pagos y ganancias' : 'View your payment history and earnings')
+                  }
                 </p>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-2">
-                <Filter className="h-4 w-4" />
-                {language === 'es' ? 'Filtrar' : 'Filter'}
-              </Button>
+              <PaymentFilters
+                filters={filters}
+                onFiltersChange={setFilters}
+                onClearFilters={() => setFilters({
+                  status: 'all',
+                  paymentType: 'all',
+                  dateFrom: undefined,
+                  dateTo: undefined,
+                })}
+              />
               <Button variant="outline" size="sm" className="gap-2">
                 <Download className="h-4 w-4" />
                 {language === 'es' ? 'Exportar' : 'Export'}
@@ -125,6 +173,12 @@ const TeamPayments = () => {
       </div>
 
       <main className="container mx-auto px-6 py-8">
+        {/* Project Breadcrumb */}
+        <div className="mb-6">
+          <ProjectBreadcrumb 
+            pageName={language === 'es' ? 'Mis Pagos' : 'My Payments'} 
+          />
+        </div>
         {/* Desktop Table */}
         <div className="hidden md:block">
           <Card className="border-border/50 shadow-card bg-gradient-card">

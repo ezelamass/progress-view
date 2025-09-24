@@ -51,11 +51,12 @@ const TeamPaymentHistory = () => {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'salary': return '💼';
+      case 'desarrollo': return '💻';
+      case 'mantenimiento': return '🔧';
       case 'bonus': return '🎁';
-      case 'commission': return '📊';
-      case 'milestone': return '🎯';
-      default: return '💰';
+      case 'commission': return '📈';
+      case 'reimbursement': return '💳';
+      default: return '💵';
     }
   };
 
