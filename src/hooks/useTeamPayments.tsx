@@ -48,7 +48,12 @@ export const useTeamPayments = (projectId?: string) => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Fetched payments data:', data);
       setPayments((data as unknown) as TeamPaymentWithDetails[] || []);
     } catch (error) {
       console.error('Error fetching team payments:', error);

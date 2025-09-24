@@ -51,9 +51,14 @@ const adminNavItems = [
     icon: FolderKanban,
   },
   {
+    title: "Calendar",
+    href: "/admin/calendar",
+    icon: Calendar,
+  },
+  {
     title: "Phases",
     href: "/admin/phases",
-    icon: Calendar,
+    icon: CheckSquare,
   },
   {
     title: "Deliverables",

@@ -28,7 +28,14 @@ const TeamPayments = () => {
   
   // Filter payments for current user and optionally by selected project and filters
   const filteredPayments = useMemo(() => {
-    let userPayments = payments.filter(payment => payment.user_id === profile?.user_id);
+    console.log('All payments:', payments);
+    console.log('Profile user_id:', profile?.user_id);
+    console.log('Profile auth user_id:', profile?.id);
+    
+    // Use the correct user_id field from the profile - should match auth.uid()
+    let userPayments = payments.filter(payment => {
+      return payment.user_id === profile?.user_id;
+    });
     
     if (projectContext?.selectedProject) {
       userPayments = userPayments.filter(payment => payment.project_id === projectContext.selectedProject?.id);

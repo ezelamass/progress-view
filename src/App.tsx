@@ -27,6 +27,7 @@ import MeetingManagement from "./pages/admin/MeetingManagement";
 import TeamPaymentRateManagement from "./pages/admin/TeamPaymentRateManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import UserManagement from "./pages/admin/UserManagement";
+import AdminCalendar from "./pages/admin/AdminCalendar";
 import TeamPayments from "./pages/team/TeamPayments";
 import TeamCalendar from "./pages/team/TeamCalendar";
 import AdminPageGuard from "./components/AdminPageGuard";
@@ -123,6 +124,11 @@ const App = () => (
     <Route path="projects" element={
       <AdminPageGuard allowedRoles={['admin']}>
         <ProjectManagement />
+      </AdminPageGuard>
+    } />
+    <Route path="calendar" element={
+      <AdminPageGuard allowedRoles={['admin']}>
+        <AdminCalendar />
       </AdminPageGuard>
     } />
     <Route path="phases" element={
