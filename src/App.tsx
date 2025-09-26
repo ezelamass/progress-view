@@ -90,6 +90,7 @@ const App = () => (
                       <TeamLayout />
                     </ProtectedRoute>
                   }>
+                    <Route index element={<TeamCalendar />} />
                     <Route path="calendar" element={<TeamCalendar />} />
                     <Route path="payments" element={<TeamPayments />} />
                   </Route>

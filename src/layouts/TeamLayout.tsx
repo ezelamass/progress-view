@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Home,
-  HelpCircle
+  HelpCircle,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,6 +20,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -36,7 +38,7 @@ const teamNavItems = [
   },
   {
     title: "Calendar",
-    href: "/team/calendar",
+    href: "/team/calendar", 
     icon: Calendar,
   },
   {
@@ -89,7 +91,7 @@ export default function TeamLayout() {
 
   const isActivePath = (path: string) => {
     if (path === "/") {
-      return location.pathname === "/";
+      return location.pathname === "/team" || location.pathname === "/";
     }
     return location.pathname.startsWith(path);
   };
@@ -239,9 +241,45 @@ export default function TeamLayout() {
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium text-sm">{displayName}</p>
                       <p className="text-xs text-muted-foreground">{profile?.email}</p>
+                      {selectedProject && (
+                        <p className="text-xs text-muted-foreground">
+                          {selectedProject.clients?.company} - {selectedProject.name}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <DropdownMenuSeparator />
+
+                  {/* Project Selector for team members with multiple projects */}
+                  {projectContext?.projects && projectContext.projects.length > 1 && (
+                    <>
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">
+                        {language === 'es' ? 'Cambiar Proyecto' : 'Switch Project'}
+                      </DropdownMenuLabel>
+                      {projectContext.projects.map((project) => (
+                        <DropdownMenuItem
+                          key={project.id}
+                          onClick={() => projectContext.setSelectedProject(project)}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4" />
+                            <div className="flex flex-col">
+                              <span className="text-sm">{project.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {project.clients?.company}
+                              </span>
+                            </div>
+                          </div>
+                          {selectedProject?.id === project.id && (
+                            <div className="h-2 w-2 rounded-full bg-primary" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  
                   <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />
                     {language === 'es' ? 'Perfil' : 'Profile'}
