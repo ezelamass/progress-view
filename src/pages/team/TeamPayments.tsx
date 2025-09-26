@@ -16,7 +16,7 @@ const TeamPayments = () => {
   const projectContext = useProjectOptional();
   const selectedProjectId = projectContext?.selectedProject?.id;
   const { payments, loading } = useTeamPayments(selectedProjectId);
-  const { profile } = useAuth();
+  const { profile, user, session } = useAuth();
   const { language } = useTheme();
   
   const [filters, setFilters] = useState<PaymentFiltersType>({
@@ -25,21 +25,22 @@ const TeamPayments = () => {
     dateFrom: undefined,
     dateTo: undefined,
   });
+
+  // Add authentication debugging
+  console.log('TeamPayments - Auth state:', { 
+    user: user?.id, 
+    profile: profile?.user_id, 
+    role: profile?.role, 
+    hasSession: !!session 
+  });
   
-  // Filter payments for current user and optionally by selected project and filters
+  // Filter payments (RLS already handles user filtering, we just need to apply UI filters)
   const filteredPayments = useMemo(() => {
-    console.log('All payments:', payments);
-    console.log('Profile user_id:', profile?.user_id);
-    console.log('Profile auth user_id:', profile?.id);
+    console.log('All payments from RLS:', payments);
+    console.log('Number of payments returned by RLS:', payments.length);
     
-    // Use the correct user_id field from the profile - should match auth.uid()
-    let userPayments = payments.filter(payment => {
-      return payment.user_id === profile?.user_id;
-    });
-    
-    if (projectContext?.selectedProject) {
-      userPayments = userPayments.filter(payment => payment.project_id === projectContext.selectedProject?.id);
-    }
+    // RLS already filters to current user's payments, so we just apply UI filters
+    let userPayments = [...payments];
     
     // Apply filters
     if (filters.status !== 'all') {
@@ -65,7 +66,7 @@ const TeamPayments = () => {
     }
     
     return userPayments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [payments, profile?.user_id, projectContext?.selectedProject, filters]);
+  }, [payments, filters]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(language === 'es' ? 'es-ES' : 'en-US', {
@@ -214,6 +215,12 @@ const TeamPayments = () => {
                         {language === 'es' ? 'Cargando pagos...' : 'Loading payments...'}
                       </TableCell>
                     </TableRow>
+                  ) : !session || !user ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        {language === 'es' ? 'Debes iniciar sesión para ver tus pagos' : 'You must be logged in to view your payments'}
+                      </TableCell>
+                    </TableRow>
                   ) : filteredPayments.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
@@ -259,6 +266,12 @@ const TeamPayments = () => {
             <Card className="border-border/50 shadow-card bg-gradient-card">
               <CardContent className="p-8 text-center text-muted-foreground">
                 {language === 'es' ? 'Cargando pagos...' : 'Loading payments...'}
+              </CardContent>
+            </Card>
+          ) : !session || !user ? (
+            <Card className="border-border/50 shadow-card bg-gradient-card">
+              <CardContent className="p-8 text-center text-muted-foreground">
+                {language === 'es' ? 'Debes iniciar sesión para ver tus pagos' : 'You must be logged in to view your payments'}
               </CardContent>
             </Card>
           ) : filteredPayments.length === 0 ? (

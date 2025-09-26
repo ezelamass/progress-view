@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Database } from '@/integrations/supabase/types';
+import { useAuth } from '@/hooks/useAuth';
 
 type TeamPayment = Database['public']['Tables']['team_payments']['Row'];
 type TeamPaymentInsert = Database['public']['Tables']['team_payments']['Insert'];
@@ -22,19 +23,26 @@ export const useTeamPayments = (projectId?: string) => {
   const [payments, setPayments] = useState<TeamPaymentWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user, session } = useAuth();
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
+      
+      // Check if user is authenticated
+      if (!session || !user) {
+        console.log('No authenticated session found');
+        setPayments([]);
+        return;
+      }
+
+      console.log('Fetching payments for user:', user.id);
+      console.log('Session exists:', !!session);
+
       let query = supabase
         .from('team_payments')
         .select(`
           *,
-          profiles:user_id (
-            first_name,
-            last_name,
-            email
-          ),
           projects:project_id (
             name
           )
@@ -50,18 +58,21 @@ export const useTeamPayments = (projectId?: string) => {
 
       if (error) {
         console.error('Supabase error:', error);
+        console.error('Error details:', error.message);
         throw error;
       }
       
       console.log('Fetched payments data:', data);
+      console.log('Number of payments:', data?.length || 0);
       setPayments((data as unknown) as TeamPaymentWithDetails[] || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching team payments:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch team payments",
+        description: error.message || "Failed to fetch team payments",
         variant: "destructive",
       });
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -142,8 +153,10 @@ export const useTeamPayments = (projectId?: string) => {
   };
 
   useEffect(() => {
-    fetchPayments();
-  }, [projectId]);
+    if (session && user) {
+      fetchPayments();
+    }
+  }, [projectId, session, user]);
 
   return {
     payments,
