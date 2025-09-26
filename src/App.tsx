@@ -28,8 +28,12 @@ import TeamPaymentRateManagement from "./pages/admin/TeamPaymentRateManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import UserManagement from "./pages/admin/UserManagement";
 import AdminCalendar from "./pages/admin/AdminCalendar";
-import TeamPayments from "./pages/team/TeamPayments";
 import TeamCalendar from "./pages/team/TeamCalendar";
+import TeamPayments from "./pages/team/TeamPayments";
+import TeamPhases from "./pages/team/TeamPhases";
+import TeamDeliverables from "./pages/team/TeamDeliverables";
+import TeamMeetings from "./pages/team/TeamMeetings";
+import TeamDashboard from "./pages/team/TeamDashboard";
 import AdminPageGuard from "./components/AdminPageGuard";
 
 const queryClient = new QueryClient();
@@ -85,13 +89,16 @@ const App = () => (
                   } />
                   
                   {/* Team Routes - Protected for team role with dedicated layout */}
-                  <Route path="/team" element={
+                  <Route path="/team/*" element={
                     <ProtectedRoute requiredRole="team">
                       <TeamLayout />
                     </ProtectedRoute>
                   }>
-                    <Route index element={<TeamCalendar />} />
+                    <Route index element={<TeamDashboard />} />
                     <Route path="calendar" element={<TeamCalendar />} />
+                    <Route path="phases" element={<TeamPhases />} />
+                    <Route path="deliverables" element={<TeamDeliverables />} />
+                    <Route path="meetings" element={<TeamMeetings />} />
                     <Route path="payments" element={<TeamPayments />} />
                   </Route>
                   

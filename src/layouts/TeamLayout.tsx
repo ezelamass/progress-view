@@ -12,7 +12,10 @@ import {
   ChevronRight,
   Home,
   HelpCircle,
-  Building2
+  Building2,
+  Clock,
+  Package,
+  Video
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,13 +36,28 @@ import { useTheme } from "@/contexts/ThemeContext";
 const teamNavItems = [
   {
     title: "Dashboard",
-    href: "/",
+    href: "/team",
     icon: Home,
   },
   {
     title: "Calendar",
     href: "/team/calendar", 
     icon: Calendar,
+  },
+  {
+    title: "Phases",
+    href: "/team/phases",
+    icon: Clock,
+  },
+  {
+    title: "Deliverables", 
+    href: "/team/deliverables",
+    icon: Package,
+  },
+  {
+    title: "Meetings",
+    href: "/team/meetings", 
+    icon: Video,
   },
   {
     title: "Payments",
@@ -317,7 +335,10 @@ export default function TeamLayout() {
 function getSpanishTitle(title: string): string {
   const translations: Record<string, string> = {
     'Dashboard': 'Panel',
-    'Calendar': 'Calendario',
+    'Calendar': 'Calendario', 
+    'Phases': 'Fases',
+    'Deliverables': 'Entregables',
+    'Meetings': 'Reuniones',
     'Payments': 'Pagos',
     'Help': 'Ayuda',
   };
