@@ -41,8 +41,8 @@ const queryClient = new QueryClient();
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   
-  // Show header on main app routes (but not admin routes)
-  const showHeader = ['/', '/calendar', '/deliverables', '/payments', '/help', '/team/payments', '/team/calendar'].includes(location.pathname);
+  // Show header on main app routes (but not admin or team routes)
+  const showHeader = ['/', '/calendar', '/deliverables', '/payments', '/help'].includes(location.pathname);
   
   return (
     <div className="min-h-screen bg-background">
@@ -89,11 +89,13 @@ const App = () => (
                   } />
                   
                   {/* Team Routes - Protected for team role with dedicated layout */}
-                  <Route path="/team/*" element={
-                    <ProtectedRoute requiredRole="team">
-                      <TeamLayout />
-                    </ProtectedRoute>
-                  }>
+                  <Route 
+                    path="/team/*" 
+                    element={
+                      <ProtectedRoute requiredRole="team">
+                        <TeamLayout />
+                      </ProtectedRoute>
+                    }>
                     <Route index element={<TeamDashboard />} />
                     <Route path="calendar" element={<TeamCalendar />} />
                     <Route path="phases" element={<TeamPhases />} />

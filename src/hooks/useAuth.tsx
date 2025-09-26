@@ -57,8 +57,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               
               // Role-based redirect only on sign in
               if (event === 'SIGNED_IN' && profileData) {
-                if (profileData.role === 'admin' || profileData.role === 'team') {
+                if (profileData.role === 'admin') {
                   navigate('/admin');
+                } else if (profileData.role === 'team') {
+                  navigate('/team');
                 } else {
                   navigate('/');
                 }
