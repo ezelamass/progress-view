@@ -31,14 +31,22 @@ export const useTeamPayments = (projectId?: string) => {
       
       // Check if user is authenticated
       if (!session || !user) {
-        console.log('No authenticated session found');
+        console.log('[useTeamPayments] No authenticated session found:', {
+          hasSession: !!session,
+          hasUser: !!user
+        });
         setPayments([]);
+        setLoading(false);
         return;
       }
 
-      console.log('Fetching payments for user:', user.id);
-      console.log('Session exists:', !!session);
+      console.log('[useTeamPayments] Fetching payments for user:', {
+        userId: user.id,
+        email: user.email,
+        projectId: projectId || 'all'
+      });
 
+      // Build query - RLS will automatically filter to current user's payments
       let query = supabase
         .from('team_payments')
         .select(`
@@ -51,25 +59,33 @@ export const useTeamPayments = (projectId?: string) => {
 
       // Filter by project if provided
       if (projectId) {
+        console.log('[useTeamPayments] Filtering by project:', projectId);
         query = query.eq('project_id', projectId);
       }
 
       const { data, error } = await query;
 
       if (error) {
-        console.error('Supabase error:', error);
-        console.error('Error details:', error.message);
+        console.error('[useTeamPayments] Supabase error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
       
-      console.log('Fetched payments data:', data);
-      console.log('Number of payments:', data?.length || 0);
+      console.log('[useTeamPayments] Successfully fetched payments:', {
+        count: data?.length || 0,
+        payments: data
+      });
+      
       setPayments((data as unknown) as TeamPaymentWithDetails[] || []);
     } catch (error: any) {
-      console.error('Error fetching team payments:', error);
+      console.error('[useTeamPayments] Error fetching team payments:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to fetch team payments",
+        title: "Authentication Error",
+        description: error.message || "Failed to fetch team payments. Please make sure you're logged in.",
         variant: "destructive",
       });
       setPayments([]);

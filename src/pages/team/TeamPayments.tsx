@@ -26,12 +26,21 @@ const TeamPayments = () => {
     dateTo: undefined,
   });
 
-  // Add authentication debugging
-  console.log('TeamPayments - Auth state:', { 
-    user: user?.id, 
-    profile: profile?.user_id, 
+  // Debug authentication state
+  console.log('[TeamPayments] Auth state:', { 
+    hasUser: !!user,
+    userId: user?.id,
+    hasProfile: !!profile, 
+    profileUserId: profile?.user_id, 
     role: profile?.role, 
-    hasSession: !!session 
+    hasSession: !!session,
+    selectedProject: selectedProjectId
+  });
+  
+  console.log('[TeamPayments] Payments state:', {
+    loading,
+    paymentsCount: payments.length,
+    payments
   });
   
   // Filter payments (RLS already handles user filtering, we just need to apply UI filters)

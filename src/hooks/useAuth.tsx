@@ -32,16 +32,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
+    console.log('[useAuth] Initializing authentication...');
+    
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        console.log('[useAuth] Auth state changed:', {
+          event,
+          hasSession: !!session,
+          userId: session?.user?.id,
+          email: session?.user?.email
+        });
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile
+          // Fetch user profile - use setTimeout to avoid potential deadlock
           setTimeout(async () => {
             try {
+              console.log('[useAuth] Fetching profile for user:', session.user.id);
+              
               const { data: profileData, error } = await supabase
                 .from('profiles')
                 .select('*')
@@ -49,9 +60,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 .single();
               
               if (error) {
-                console.error('Error fetching profile:', error);
+                console.error('[useAuth] Error fetching profile:', error);
+                setLoading(false);
                 return;
               }
+              
+              console.log('[useAuth] Profile fetched:', {
+                hasProfile: !!profileData,
+                role: profileData?.role,
+                email: profileData?.email
+              });
               
               setProfile(profileData);
               
@@ -65,23 +83,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   navigate('/');
                 }
               }
+              
+              setLoading(false);
             } catch (error) {
-              console.error('Profile fetch error:', error);
+              console.error('[useAuth] Profile fetch error:', error);
+              setLoading(false);
             }
           }, 0);
         } else {
           setProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('[useAuth] Error getting initial session:', error);
+        setLoading(false);
+        return;
+      }
+      
+      console.log('[useAuth] Initial session:', {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        email: session?.user?.email
+      });
+      
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
+      
+      if (!session) {
+        setLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
