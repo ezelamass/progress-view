@@ -29,24 +29,13 @@ export const useTeamPayments = (projectId?: string) => {
     try {
       setLoading(true);
       
-      // Check if user is authenticated
       if (!session || !user) {
-        console.log('[useTeamPayments] No authenticated session found:', {
-          hasSession: !!session,
-          hasUser: !!user
-        });
         setPayments([]);
         setLoading(false);
         return;
       }
 
-      console.log('[useTeamPayments] Fetching payments for user:', {
-        userId: user.id,
-        email: user.email,
-        projectId: projectId || 'all'
-      });
-
-      // Build query - RLS will automatically filter to current user's payments
+      // RLS handles filtering - only user's payments for assigned projects are returned
       let query = supabase
         .from('team_payments')
         .select(`
@@ -57,35 +46,20 @@ export const useTeamPayments = (projectId?: string) => {
         `)
         .order('created_at', { ascending: false });
 
-      // Filter by project if provided
+      // Optional: filter by specific project
       if (projectId) {
-        console.log('[useTeamPayments] Filtering by project:', projectId);
         query = query.eq('project_id', projectId);
       }
 
       const { data, error } = await query;
 
-      if (error) {
-        console.error('[useTeamPayments] Supabase error:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        throw error;
-      }
-      
-      console.log('[useTeamPayments] Successfully fetched payments:', {
-        count: data?.length || 0,
-        payments: data
-      });
+      if (error) throw error;
       
       setPayments((data as unknown) as TeamPaymentWithDetails[] || []);
     } catch (error: any) {
-      console.error('[useTeamPayments] Error fetching team payments:', error);
       toast({
-        title: "Authentication Error",
-        description: error.message || "Failed to fetch team payments. Please make sure you're logged in.",
+        title: "Error",
+        description: "Failed to fetch team payments",
         variant: "destructive",
       });
       setPayments([]);
