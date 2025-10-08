@@ -18,17 +18,17 @@ const QuickActions = ({ project }: QuickActionsProps) => {
   const { language } = useTheme();
   const actions = [
     {
-      icon: Calendar,
-      label: language === 'es' ? "Programar Seguimiento" : "Schedule Follow-up",
-      description: language === 'es' ? "Reservar una nueva reunión con el equipo" : "Book a new meeting with team members",
-      action: () => window.open("https://calendly.com/ezequiellamas-advantx/15min-seguimiento", "_blank"),
-      primary: true,
-    },
-    {
       icon: CheckSquare,
       label: language === 'es' ? "Ver Entregables" : "View Deliverables", 
       description: language === 'es' ? "Verificar entregables e hitos del proyecto" : "Check project deliverables and milestones",
       action: () => navigate("/deliverables"),
+      primary: true,
+    },
+    {
+      icon: Calendar,
+      label: language === 'es' ? "Programar Seguimiento" : "Schedule Follow-up",
+      description: language === 'es' ? "Reservar una nueva reunión con el equipo" : "Book a new meeting with team members",
+      action: () => window.open("https://calendly.com/ezequiellamas-advantx/15min-seguimiento", "_blank"),
       primary: false,
     },
     {
